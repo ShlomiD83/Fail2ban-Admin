@@ -1,0 +1,28 @@
+# Weekly pull requests for outdated or vulnerable dependencies. Patch and minor updates are merged
+# automatically after a test build (see workflows/dependabot-automerge.yml), and Python updates are
+# then published as a new image. Major updates stay open for you to review.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  # CodeMirror and esbuild for the configuration editor (bundled into the image)
+  - package-ecosystem: npm
+    directory: /editor
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      codemirror:
+        patterns: ["@codemirror/*", "@lezer/*", "@replit/*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

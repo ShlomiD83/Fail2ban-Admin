@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{% from "_apply.html" import reload_btn %}
+{% from "_ipinfo.html" import iptags %}
+{% block body %}
+<div class="dhead"><div><h1>Dashboard</h1><p class="muted" style="margin:.1rem 0 0">{{ now_text }} · {{ tzname }}</p></div></div>
+{% include "_audit_problem.html" %}
+{% if st.error and st.starting is none %}<div class="flash error">{{ st.error }}</div>{% endif %}
+
+{% if attention %}
+<div class="attn" role="status">
+  <span class="attn-i">!</span>
+  <div class="grow"><b>Needs attention</b>
+    <ul>{% for kind, text in attention %}<li>{{ text }}{% if kind == 'config' %} <a href="{{ url_for('files') }}">Open the configuration →</a>{% endif %}</li>{% endfor %}</ul>
+  </div>
+  {% if attention|selectattr(0, 'equalto', 'reload')|list %}{{ reload_btn('Reload now', cls='btn sm') }}{% endif %}
+</div>
+{% endif %}
+
+<div class="dlayout" id="dash-cards">
+  <div class="dcol">
+    <section class="card flush" data-card="1" data-pin="left">
+      <h2 class="ch">{{ ic('ban') }}Banned now <span class="pill{{ ' bad' if banned }}">{{ banned|length }}</span><a class="r" href="{{ url_for('jails') }}">All jails →</a></h2>
+      <form method="post" action="{{ url_for('ban') }}" class="banbar" data-confirm="Apply this to the addresses you entered? Bans and unbans run the jail's actions.">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ url_for('dashboard') }}">
+        <input type="text" name="ips" class="mono" placeholder="Ban or unban: 198.51.100.7, 203.0.113.0/24" aria-label="IP addresses or networks" required spellcheck="false" autocomplete="off">
+        <select name="jail" aria-label="Jail">{% for j in st.jails %}<option>{{ j }}</option>{% endfor %}<option value="*">all jails (unban only)</option></select>
+        <button class="btn bad">{{ ic('ban') }}Ban</button>
+        <button class="btn sec" formaction="{{ url_for('unban') }}">{{ ic('unlock') }}Unban</button>
+        <div class="qopts">
+          <label class="chk" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>
+          <label class="chk" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>
+        </div>
+      </form>
+      {% if banned_error %}<div class="flash error" style="margin:.8rem 1.1rem">{{ banned_error }}</div>{% endif %}
+      {% if banned %}
+      <div class="tscroll">
+      <table class="bans">
+        <thead><tr><th>IP</th><th>Jail</th><th>Since</th><th>Expires</th><th>Why</th><th></th></tr></thead>
+        <tbody>
+        {% for b in banned[:8] %}
+        <tr>
+          <td class="b-ip"><a class="ip" href="{{ url_for('lookup', ip=b.ip) }}">{{ b.ip }}</a>{{ iptags(b.ip) }}</td>
+          <td class="b-jail"><span class="tag mut">{{ b.jail }}</span></td>
+          <td class="b-since">{{ b.start|short }}</td>
+          <td class="b-exp">{% if b.bantime is not none and b.bantime < 0 %}<span class="tag bad">never</span>{% else %}{{ b.end|until }}{% endif %}</td>
+          <td class="why b-why">{{ b.why or '–' }}</td>
+          <td class="acts">
+            <a class="btn sec sm" href="{{ abuseipdb(b.ip) }}" target="_blank" rel="noopener noreferrer" title="Reputation, reports, country and ISP of {{ b.ip }} on abuseipdb.com">AbuseIPDB ↗</a>
+            <form method="post" action="{{ url_for('unban') }}" class="inline" data-confirm="Unban {{ b.ip }} in {{ b.jail }}? The jail's unban actions run too.">
+              <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="jail" value="{{ b.jail }}"><input type="hidden" name="ips" value="{{ b.ip }}"><input type="hidden" name="back" value="{{ url_for('dashboard') }}">
+              <button class="btn sec sm">Unban</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% if banned|length > 8 %}<div class="cfoot"><a href="{{ url_for('jails') }}">Show {{ banned|length - 8 }} more →</a></div>{% endif %}
+      {% elif not st.error %}
+      <p class="empty">Nobody is banned right now.</p>
+      {% endif %}
+    </section>
+
+    <section class="card flush" data-card="3">
+      <h2 class="ch">{{ ic('activity') }}Bans over time
+        {% if chart %}<span class="r seg" role="group" aria-label="Range">
+          <button type="button" data-range="24h">24 h</button><button type="button" data-range="7d" class="on">7 days</button><button type="button" data-range="30d">30 days</button>
+        </span>{% endif %}</h2>
+      {% if chart %}
+      <div class="chart" id="chart" data-series="{{ chart_json }}">
+        <div class="bars" id="chart-bars">{% for b in chart['7d'].bars %}<i class="{{ 'hi' if b.hi }}" style="height:{{ [b.pct, 2]|max }}%" title="{{ b.label }}: {{ b.n }} ban{{ 's' if b.n != 1 }}"></i>{% endfor %}</div>
+        <div class="axis" id="chart-axis">{% for t in chart['7d'].ticks %}<span>{{ t }}</span>{% endfor %}</div>
+      </div>
+      <div class="csum"><span><b id="chart-total">{{ chart['7d'].total }}</b> bans</span><span><b id="chart-ips">{{ chart['7d'].ips }}</b> different IPs</span>
+        <span><b>{{ today }}</b> today ({% if today > yesterday %}▲ {{ today - yesterday }}{% elif today < yesterday %}▼ {{ yesterday - today }}{% else %}same as{% endif %} {{ 'vs' if today != yesterday }} yesterday)</span>
+        <span id="chart-busiest-w"{% if not chart['7d'].busiest %} hidden{% endif %}>Busiest: <b id="chart-busiest">{{ chart['7d'].busiest }}</b></span></div>
+      {% else %}
+      <p class="empty">Fail2ban's database isn't readable here, so there's no history to chart (<code>FAIL2BAN_DB_FILE</code>).</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="dcol">
+    <section class="card flush" data-card="2" data-pin="right">
+      <h2 class="ch">{{ ic('jail') }}Jails<a class="r" href="{{ url_for('jails') }}">Manage →</a></h2>
+      {% for r in jails_info %}
+      <div class="jrow">
+        <span class="sdot {{ 'bad' if r.error else ('warn' if r.logs == 0 else 'ok') }}"></span>
+        <a class="jn" href="{{ url_for('jail', name=r.name) }}">{{ r.name }}</a>
+        <span class="jnums"><span><b class="{{ 'bad' if r.banned }}">{{ r.banned }}</b>banned</span><span><b>{{ r.failed }}</b>failing</span></span>
+        <span class="jmeta{{ ' warn' if r.logs == 0 }}">
+          {%- if r.error %}{{ r.error }}{% else -%}
+          {{ 'last ban ' ~ (r.last|ago) if r.last else 'no bans in 30 days' }} · {% if r.logs %}{{ r.logs }} log{{ 's' if r.logs != 1 }}{% else %}no log files found{% endif %} ·
+          {% if r.bantime is not none and r.bantime|int < 0 %}permanent bans{% else %}{{ r.bantime|duration }} bans{% endif %}{% endif -%}
+        </span>
+        <span class="jact">{{ reload_btn('', jail=r.name, cls='iconbtn', title='Reload jail ' ~ r.name) }}</span>
+      </div>
+      {% else %}
+      <p class="empty">{{ 'Fail2ban isn\'t reachable right now.' if st.error else 'No jails are running. Enable one in a jail file (enabled = true) and reload.' }}</p>
+      {% endfor %}
+    </section>
+
+    <section class="card flush" data-card="4">
+      <h2 class="ch">{{ ic('flame') }}Top offenders<span class="r muted">30 days</span></h2>
+      {% for o in offenders %}
+      <a class="orow" href="{{ url_for('lookup', ip=o.ip) }}"><span><span class="ip">{{ o.ip }}</span>{{ iptags(o.ip) }}</span><b>{{ o.n }}×</b><span class="obar"><i style="width:{{ o.pct }}%"></i></span></a>
+      {% else %}
+      <p class="empty">{{ 'No bans in the last 30 days.' if db_ok else 'Fail2ban\'s database isn\'t readable here.' }}</p>
+      {% endfor %}
+    </section>
+    <section class="card flush" data-card="5">
+      <h2 class="ch">{{ ic('activity') }}Recent activity<a class="r" href="{{ url_for('activity') }}">Full history →</a></h2>
+      <ul class="feed">
+        {% for e in feed %}
+        <li><span class="t">{{ e.time|short }}</span>
+          <span class="fd {{ 'bad' if e.kind == 'ban' else ('warn' if e.action in ('File saved', 'File created', 'File deleted', 'Backup restored', 'Imported', 'Reloaded (failed)') else 'pri') }}"></span>
+          {% if e.kind == 'ban' %}
+          <span class="what"><a class="ip" href="{{ url_for('lookup', ip=e.ip) }}"><b>{{ e.ip }}</b></a>{{ iptags(e.ip) }} banned in {{ e.jail }}<small>{{ e.text }}</small></span>
+          {% else %}
+          <span class="what">{{ e.action }}{% if e.target %} <span class="mono small">{{ e.target }}</span>{% endif %}<small>{{ e.text }}</small></span>
+          {% endif %}
+        </li>
+        {% else %}
+        <li><span></span><span></span><span class="what muted">Nothing yet: bans and changes made here show up as they happen.</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section class="card flush" data-card="6">
+      <h2 class="ch">{{ ic('file') }}Configuration &amp; backups<span class="r"><span class="tag mut" id="dash-config">checking…</span></span></h2>
+      <div class="kvs">
+        <div><span>Last change</span><span>{% if last_file %}<a href="{{ url_for('file_edit', path=last_file.rel) }}">{{ last_file.rel }}</a> · {{ last_file.mtime|ago }}{% if last_by %} by {{ last_by }}{% endif %}{% else %}–{% endif %}</span></div>
+        <div><span>Files</span><span><a href="{{ url_for('files') }}">{{ counts.jail }} jail · {{ counts.filter }} filter · {{ counts.action }} action{{ 's' if counts.action != 1 }}</a></span></div>
+        <div><span>Latest backup</span><span><a href="{{ url_for('backups') }}">{{ bk_latest|ago if bk_latest else 'none yet' }} · {{ bk_count }} in total</a></span></div>
+        <div><span>Export</span><span><a href="{{ url_for('export_zip') }}">Download zip</a></span></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}

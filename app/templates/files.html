@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{% from "_apply.html" import pending_banner %}
+{% block body %}
+<div class="pagehead"><h1>Configuration</h1>
+  <p class="sub">Files in <code>{{ config_dir }}</code>. Every save is checked with Fail2ban's own configuration reader and backed up first.</p>
+</div>
+{{ pending_banner(pending) }}
+{% if not layout_ok %}
+<div class="flash warn">No jail.d, filter.d or action.d folder in <code>{{ config_dir }}</code>. Check that <code>FAIL2BAN_CONFIG_DIR</code> points at the folder mounted as Fail2ban's <code>/data</code> (crazymax image) or its configuration folder.</div>
+{% endif %}
+
+<div class="card accent">
+  <h2>{{ ic('plus') }} New file</h2>
+  <form method="post" action="{{ url_for('file_new') }}" class="inline-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div><label for="nf-kind">Kind</label>
+      <select id="nf-kind" name="kind">
+        <option value="jail">Jail (jail.d)</option><option value="filter">Filter (filter.d)</option>
+        <option value="action">Action (action.d)</option><option value="main">Main file (top level)</option>
+      </select></div>
+    <div class="grow"><label for="nf-name">Name</label><input type="text" id="nf-name" name="name" placeholder="e.g. nginx-badbots (.conf or .local is added)" required pattern="[A-Za-z0-9][A-Za-z0-9._@+\-]*"></div>
+    <button class="btn">Create</button>
+  </form>
+  <p class="muted small" style="margin:.6rem 0 0">The editor opens with a starting template; nothing is written until you save.</p>
+</div>
+
+{% for g in groups %}
+<div class="card">
+  <details open>
+    <summary><h2 style="margin:0">{{ g.title }}</h2><span class="tag mut">{{ g['items']|length }}</span><span class="hint">{{ g.hint }}</span></summary>
+    <table class="stack filelist" style="margin-top:.5rem">
+      <thead><tr><th>File</th><th>{{ 'Jails' if g.key in ('jail', 'main') else '' }}</th><th>Changed</th><th class="num">Size</th><th></th></tr></thead>
+      <tbody>
+      {% for f in g['items'] %}
+      <tr class="{{ '' if f.editable else 'muted' }}">
+        <td data-label="File">{% if f.editable %}<a href="{{ url_for('file_edit', path=f.rel) }}">{{ f.name }}</a>{% if f.stock %} <span class="tag warn" title="Fail2ban's own file: put changes in a .local file instead">stock</span>{% endif %}{% else %}{{ f.name }} <span class="tag mut" title="Fail2ban only reads .conf and .local files">not read by Fail2ban</span>{% endif %}</td>
+        <td data-label="Jails">{% for j in f.jails or [] %}<span class="tag">{{ j }}</span>{% endfor %}</td>
+        <td data-label="Changed" class="small">{{ f.mtime|when }}</td>
+        <td data-label="Size" class="num small">{{ (f.size / 1024)|round(1) }} KB</td>
+        <td class="acts">
+          {% if f.editable %}<a class="btn sec sm" href="{{ url_for('file_edit', path=f.rel) }}">Edit</a>{% endif %}
+          <form method="post" action="{{ url_for('file_delete') }}" class="inline" data-confirm="Delete {{ f.rel }}? A backup is kept, and you can restore it from Backups.">
+            <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="path" value="{{ f.rel }}">
+            <button class="btn ghost-bad sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="muted">No files yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </details>
+</div>
+{% endfor %}
+<p class="muted small">Fail2ban's stock filters and actions (sshd, nginx-http-auth, iptables, cloudflare, …) are built into its image and can be used by name; files here add to them or override them.</p>
+{% endblock %}

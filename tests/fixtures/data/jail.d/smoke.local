@@ -1,0 +1,8 @@
+[smoke]
+enabled = true
+filter = smoke
+action = dummy
+logpath = /log/smoke.log
+ignoreip = 127.0.0.1/8 192.0.2.0/24
+maxretry = 5
+bantime = 1h

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_diff.html" import show %}
+{% from "_icons.html" import ic %}
+{% from "_apply.html" import reload_btn, restart_btn, pending_banner %}
+{% block head %}<script defer src="{{ url_for('static', filename='editor.js') }}"></script>{% endblock %}
+{% block body %}
+<p class="crumbs"><a href="{{ url_for('files') }}">Configuration</a> / {{ rel.split('/')[0] if '/' in rel else '' }}</p>
+<div class="pagehead"><h1>{{ rel.split('/')[-1] }}</h1>
+  {% if is_new %}<span class="tag warn">new file, not saved yet</span>{% endif %}
+  <span class="tag mut">{{ {'jail': 'jail', 'filter': 'filter', 'action': 'action', 'main': 'main file'}[kind] }}</span>
+</div>
+{% if saved %}{{ pending_banner(pending) }}{% endif %}
+{% if rel in ('jail.conf', 'fail2ban.conf') %}
+<div class="flash warn">This is Fail2ban's own file and may be replaced on an upgrade. Put changes in <code>{{ rel.replace('.conf', '.local') }}</code> or a file in jail.d instead.</div>
+{% endif %}
+<div class="card">
+  <form method="post" id="ed-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="path" value="{{ rel }}">
+    <input type="hidden" name="base" value="{{ base }}">
+    {% if from_backup %}<input type="hidden" name="from_backup" value="{{ from_backup }}">
+    <p class="from-backup">Editing the version from backup <code>{{ from_backup }}</code>. Nothing is saved until you click Check &amp; save. <a href="{{ url_for('file_edit', path=rel) }}" data-leave-ok>Discard and open the current file</a></p>{% endif %}
+    {% if conflict %}
+    <div class="conflict">
+      <h2>The file was changed somewhere else</h2>
+      <p>Someone (or something) changed <code>{{ rel }}</code> after you opened this page. Saving now would replace those changes. Lines marked <span class="del-sample">−</span> exist only in the file on disk; lines marked <span class="add-sample">+</span> only in your edits.</p>
+      {{ show(diff) }}
+      <div class="row">
+        <a class="btn sec" href="{{ url_for('file_edit', path=rel) }}" data-leave-ok>Load the current file</a>
+        <button class="btn bad" name="action" value="overwrite">Overwrite with my edits</button>
+      </div>
+    </div>
+    {% endif %}
+    <script type="application/json" id="ed-data">{{ editor_data|safe }}</script>
+    <textarea name="content" spellcheck="false" data-editor data-fingerprint="{{ url_for('file_fingerprint', path=rel) }}"
+      {% if ondisk %} data-ondisk{% else %} data-disk="{{ disk }}"{% endif %}{% if saved %} data-saved{% endif %}
+      {% if check %} data-check="{{ check|tojson|forceescape }}"{% endif %} aria-label="{{ rel }}">{{ content }}</textarea>
+    {% if diff and not conflict %}<h2 style="margin-top:1rem">Changes (current → edited)</h2>{{ show(diff) }}{% endif %}
+    {% if check %}
+    <div class="check">
+      <h3>{% if check.ok %}<span class="tag ok">passed</span>{% elif check.ok is none %}<span class="tag mut">couldn't check</span>{% else %}<span class="tag bad">{{ check.errors|length }} problem{{ 's' if check.errors|length != 1 }}</span>{% endif %}
+        Fail2ban's configuration check{% if check.jails %} · jails that would run: {{ check.jails|join(', ') }}{% endif %}</h3>
+      {% if check.errors or check.warnings %}
+      <ul>{% for e in check.errors %}<li class="e">{{ e }}</li>{% endfor %}{% for w in check.warnings %}<li class="w"><span class="muted">warning:</span> {{ w }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+    {% endif %}
+    <div class="apply">
+      <label class="chk"><input type="radio" name="apply" value="reload" {{ 'checked' if apply_mode != 'none' }}> Reload Fail2ban after saving</label>
+      <label class="chk"><input type="radio" name="apply" value="none" {{ 'checked' if apply_mode == 'none' }}> Just save</label>
+    </div>
+    <div class="row">
+      <button class="btn" name="action" value="save">{{ ic('check') }}Check &amp; save</button>
+      <button class="btn sec" name="action" value="diff">Show changes</button>
+      <button class="btn sec" name="action" value="validate">Check only</button>
+      {% if failed %}<label class="chk"><input type="checkbox" name="force"> Save anyway</label>{% endif %}
+    </div>
+    <p class="muted small" style="margin:.75rem 0 0">Checked with Fail2ban's configuration reader (the bundled stock configuration plus your folder), including every regular expression. Log files that this container can't see are only a warning. Ctrl+S checks and saves; Ctrl+Space suggests options.</p>
+  </form>
+</div>
+
+{% if kind == 'filter' %}
+<div class="card tester" id="tester" data-url="{{ url_for('file_test') }}" data-path="{{ rel }}" data-csrf="{{ csrf_token() }}">
+  <h2>{{ ic('filter') }} Test this filter</h2>
+  <p class="muted small" style="margin:0 0 .6rem">Runs <code>fail2ban-regex</code> with the text in the editor (saved or not) against sample lines or a log file.</p>
+  <label for="t-sample" style="margin-top:0">Sample log lines</label>
+  <textarea id="t-sample" spellcheck="false" placeholder="Paste lines from the log here"></textarea>
+  <div class="inline-form" style="margin-top:.6rem">
+    {% if logs %}
+    <div><label for="t-log">…or a log file</label>
+      <select id="t-log"><option value="">(use the sample lines)</option>{% for p in logs %}<option>{{ p }}</option>{% endfor %}</select></div>
+    {% endif %}
+    <button type="button" class="btn" id="t-run">{{ ic('filter') }}Run test</button>
+    <span class="msg" id="t-msg" role="status"></span>
+  </div>
+  {% if not logs %}<p class="muted small" style="margin:.5rem 0 0">To test against real logs, mount the log folders into this container read-only at the same paths as in the Fail2ban container (for example <code>/log/npm</code>).</p>{% endif %}
+  <div id="t-out" hidden style="margin-top:.8rem"><div id="t-sum" style="margin-bottom:.5rem"></div><pre id="t-pre"></pre></div>
+</div>
+{% endif %}
+{% endblock %}

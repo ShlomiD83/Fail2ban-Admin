@@ -1,0 +1,74 @@
+# Fail2ban Admin with a Docker socket proxy: the admin app never sees the Docker socket. The proxy lets it do
+# exactly six things, and only to the Fail2ban container named in .env (see README, "Docker access"):
+#   GET  /version   GET /containers/<name>/json   GET /exec/<id>/json
+#   POST /containers/<name>/exec   POST /exec/<id>/start   POST /containers/<name>/restart
+# Anything else (listing or creating containers, other containers, images, volumes) is refused with 403.
+#
+# Settings that both services use live in .env (copy .env.example to .env).
+
+services:
+  socket-proxy:
+    image: wollomatic/socket-proxy:1
+    container_name: fail2ban-admin-socket-proxy
+    restart: unless-stopped
+    user: "65534:${DOCKER_GID:?set DOCKER_GID in .env (getent group docker | cut -d: -f3)}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64M
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-proxy]
+    command:
+      - "-listenip=0.0.0.0"
+      - "-allowfrom=fail2ban-admin"         # only the admin container may connect
+      # the proxy matches the whole path (it adds ^ and $ itself)
+      - "-allowGET=/(v1\\.[0-9]+/)?(version|containers/${FAIL2BAN_CONTAINER}/json|exec/[0-9a-f]+/json)"
+      - "-allowPOST=/v1\\.[0-9]+/(containers/${FAIL2BAN_CONTAINER}/(exec|restart)|exec/[0-9a-f]+/start)"
+      - "-watchdoginterval=3600"
+      - "-stoponwatchdog"
+      - "-shutdowngracetime=5"
+
+  fail2ban-admin:
+    build: .
+    image: fail2ban-admin:latest          # or romekd/fail2ban-admin:latest once it's published
+    container_name: fail2ban-admin
+    restart: unless-stopped
+    depends_on: [socket-proxy]
+    ports:
+      - "127.0.0.1:8081:8080"             # put it behind a TLS reverse proxy; don't expose it to the internet
+    # root: Fail2ban's files belong to root (no Docker socket here, so this doesn't grant Docker access)
+    user: "0:0"
+    networks: [default, docker-proxy]     # default: internet for the public-IP lookup; docker-proxy: the proxy
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+      FAIL2BAN_CONTAINER: ${FAIL2BAN_CONTAINER}
+
+      # --- admin login (one of the password options is required) ---
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: "change-me-now"     # better: ADMIN_PASSWORD_HASH with every $ doubled ($$), see README
+      SECRET_KEY: "generate-with-openssl-rand-hex-32"
+      COOKIE_SECURE: "true"               # "false" only for plain-HTTP testing
+      TZ: UTC                             # e.g. Asia/Jerusalem
+
+      # --- optional: second step and passkeys ---
+      # ADMIN_TOTP_SECRET: "BASE32SECRET"          # generate and confirm it on the Security page
+      # ADMIN_RP_ID: f2b.example.com               # passkeys: your domain (HTTPS required)
+      # ADMIN_ORIGIN: https://f2b.example.com
+      # ADMIN_PASSKEY_ONLY: "true"                 # turn the password off once a passkey is registered
+
+      # --- optional ---
+      # PUBLIC_IP_URL: "off"                       # don't look up the server's public IP for the dashboard
+      # TRUST_PROXY: "1"                           # behind a reverse proxy that is the only way in
+    volumes:
+      # Fail2ban's configuration folder: the folder mounted as /data in the crazymax/fail2ban container
+      - ${FAIL2BAN_DATA}:/data
+      # this app's own files: backups, admin log, passkeys
+      - ./admin:/admin
+      # optional, for testing filters against real logs: the same log folders as in the Fail2ban container,
+      # at the same paths, read-only
+      # - /path/to/nginx/logs:/log/npm:ro
+
+networks:
+  docker-proxy:
+    internal: true                        # no internet, nothing else on it: just the admin app and the proxy

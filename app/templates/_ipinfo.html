@@ -1,0 +1,5 @@
+{# Country (offline) and AbuseIPDB score next to an IP. The score is filled in by app.js from /ipinfo. #}
+{% macro iptags(ip) -%}
+{%- set c = country(ip) %}{% if c %} <span class="cc" title="{{ c.name }}">{{ c.cc }}</span>{% endif %}
+{%- if abuse_on() %} <span class="score" data-abuse-ip="{{ ip }}" title="AbuseIPDB: checking…">…</span>{% endif %}
+{%- endmacro %}

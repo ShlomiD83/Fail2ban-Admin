@@ -1,0 +1,4 @@
+{% set problem = audit_problem() %}
+{% if problem %}
+<div class="flash error">Admin actions aren't being recorded: couldn't write the action log: {{ problem }}. Check that this container's user ({{ uid_gid }}) can write the admin folder ({{ admin_dir }}).</div>
+{% endif %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{% block body %}
+<p class="crumbs"><a href="{{ url_for('jails') }}">Jails &amp; Bans</a> /</p>
+<div class="pagehead"><h1>Look up an IP</h1></div>
+<form method="get" class="card">
+  <div class="row keep" style="margin:0"><input type="search" name="ip" class="grow" value="{{ q }}" placeholder="203.0.113.7" autofocus aria-label="IP address"><button class="btn">{{ ic('search') }}Look up</button></div>
+</form>
+{% if r %}
+<div class="card accent">
+  <h2 style="display:flex;flex-wrap:wrap;align-items:center;gap:.6rem"><span class="ipbig">{{ r.ip }}</span><a class="btn sec sm" href="{{ abuseipdb(r.ip) }}" target="_blank" rel="noopener noreferrer" title="Reputation, reports, country and ISP on abuseipdb.com">AbuseIPDB report ↗</a> {% if r.ip == your_ip %}<span class="tag warn">your address</span>{% endif %}</h2>
+  {%- set c = country(r.ip) %}
+  <dl class="ipfacts" id="ip-facts" data-ip="{{ r.ip }}">
+    <div><dt>Country</dt><dd>{{ c.name ~ " (" ~ c.cc ~ ")" if c else "private or unknown" }}</dd></div>
+    {% if abuse_on() %}
+    <div><dt>AbuseIPDB score</dt><dd data-f="score">checking…</dd></div>
+    <div><dt>Reports, 90 days</dt><dd data-f="reports">…</dd></div>
+    <div><dt>ISP</dt><dd data-f="isp">…</dd></div>
+    <div><dt>Usage</dt><dd data-f="usage">…</dd></div>
+    <div><dt>Domain</dt><dd data-f="domain">…</dd></div>
+    <div><dt>Last reported</dt><dd data-f="last">…</dd></div>
+    {% else %}
+    <div><dt>AbuseIPDB</dt><dd class="muted">No API key found: set ABUSEIPDB_API_KEY to see the score here.</dd></div>
+    {% endif %}
+  </dl>
+  {% if r.error %}<div class="flash error">{{ r.error }}</div>{% else %}
+  {% if r.jails %}
+  <p style="margin:0 0 .6rem"><span class="tag bad">banned</span> in {% for j in r.jails %}<a href="{{ url_for('jail', name=j) }}">{{ j }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>
+  <form method="post" action="{{ url_for('unban') }}" data-confirm="Unban {{ r.ip }} in every jail?">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="jail" value="*"><input type="hidden" name="ips" value="{{ r.ip }}"><input type="hidden" name="back" value="{{ request.full_path }}">
+    <button class="btn">{{ ic('unlock') }}Unban everywhere</button>
+  </form>
+  {% else %}
+  <p style="margin:0 0 .6rem"><span class="tag ok">not banned</span> in any jail right now.</p>
+  {% if r.all_jails %}
+  <form method="post" action="{{ url_for('ban') }}" class="inline-form" data-confirm="Ban {{ r.ip }}?">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="ips" value="{{ r.ip }}"><input type="hidden" name="back" value="{{ request.full_path }}">
+    <select name="jail" aria-label="Jail">{% for j in r.all_jails %}<option>{{ j }}</option>{% endfor %}</select>
+    <button class="btn bad">{{ ic('ban') }}Ban</button>
+    {% if r.ip == your_ip %}<label class="chk" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>{% endif %}
+    {% if r.ignored %}<label class="chk" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>{% endif %}
+  </form>
+  {% endif %}
+  {% endif %}
+  {% if r.ignored %}<p class="small" style="margin:.8rem 0 0"><span class="tag ok">never banned</span> by {% for j, entry in r.ignored %}{{ j }} (ignoreip <span class="ip">{{ entry }}</span>){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% endif %}
+</div>
+<div class="card">
+  <h2>History</h2>
+  {% if r.history is none %}<p class="muted" style="margin:0">Fail2ban's database isn't readable here.</p>
+  {% else %}
+  <table class="stack">
+    <thead><tr><th>Time</th><th>Jail</th><th>Ban time</th><th class="num">Ban #</th><th>Log lines that triggered it</th></tr></thead>
+    <tbody>
+    {% for h in r.history %}
+    <tr><td data-label="Time">{{ h.time|when }}</td><td data-label="Jail">{{ h.jail }}</td><td data-label="Ban time">{{ h.bantime|duration }}</td>
+      <td data-label="Ban #" class="num">{{ h.count }}</td>
+      <td data-label="Log lines">{% if h.matches %}<pre class="matches">{{ h.matches|join('\n') }}</pre>{% else %}<span class="muted small">{{ 'manual ban' if not h.failures else h.failures ~ ' failures' }}</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">Never banned (within the database's history; Fail2ban purges old entries after dbpurgeage).</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

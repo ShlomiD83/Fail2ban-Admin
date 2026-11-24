@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{% from "_ipinfo.html" import iptags %}
+{% block body %}
+<div class="pagehead"><h1>Activity</h1></div>
+{% include "_audit_problem.html" %}
+{% if hist is none %}
+<div class="card"><p style="margin:0">Fail2ban's database isn't readable at <code>{{ db }}</code>, so the ban history can't be shown. Set <code>FAIL2BAN_DB_FILE</code> if it's somewhere else.</p></div>
+{% else %}
+<div class="card flush">
+  <h2 class="ch">{{ ic('ban') }}Ban history</h2>
+  <div class="hfilters" id="ban-filters">
+    <div class="search" style="margin:0">{{ ic('search') }}<input type="search" id="hf-q" placeholder="IP, jail or log text" aria-label="Filter bans"></div>
+    <select id="hf-jail" aria-label="Jail"><option value="">All jails</option>{% for j in jails %}<option>{{ j }}</option>{% endfor %}</select>
+    <span class="seg" role="group" aria-label="Range"><button type="button" data-range="1">24 h</button><button type="button" data-range="7">7 days</button><button type="button" data-range="{{ days }}" class="on">{{ days }} days</button></span>
+    <label class="chk"><input type="checkbox" id="hf-now"> Banned now only</label>
+  </div>
+  <p class="hsum" id="hf-sum">{{ hist|length }} ban{{ 's' if hist|length != 1 }} from {{ hist|map(attribute='ip')|unique|list|length }} IP{{ 's' if (hist|map(attribute='ip')|unique|list|length) != 1 }} in the last {{ days }} days</p>
+  <div class="tscroll">
+  <table class="stack" id="ban-table">
+    <thead><tr><th>Time</th><th>IP</th><th>Jail</th><th>Why</th><th>Ban time</th><th class="num">Ban #</th><th></th></tr></thead>
+    <tbody>
+    {% for h in hist %}
+    {%- set now_banned = h.current %}
+    <tr data-ts="{{ h.time.timestamp()|int }}" data-jail="{{ h.jail }}" data-ip="{{ h.ip }}"{% if now_banned %} data-now{% endif %}>
+      <td data-label="Time">{{ h.time|when }}</td>
+      <td data-label="IP"><a class="ip" href="{{ url_for('lookup', ip=h.ip) }}">{{ h.ip }}</a>{{ iptags(h.ip) }}{% if now_banned %} <span class="tag bad">banned</span>{% endif %}</td>
+      <td data-label="Jail"><span class="tag mut">{{ h.jail }}</span></td>
+      <td data-label="Why" class="why">{{ h.why or '–' }}</td>
+      <td data-label="Ban time">{{ h.bantime|duration }}</td>
+      <td data-label="Ban #" class="num">{{ h.count }}</td>
+      <td class="acts"><a class="btn sec sm" href="{{ abuseipdb(h.ip) }}" target="_blank" rel="noopener noreferrer" title="Reputation, reports, country and ISP of {{ h.ip }} on abuseipdb.com">AbuseIPDB ↗</a>{% if now_banned %}
+        <form method="post" action="{{ url_for('unban') }}" class="inline" data-confirm="Unban {{ h.ip }} in {{ h.jail }}?">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="jail" value="{{ h.jail }}"><input type="hidden" name="ips" value="{{ h.ip }}"><input type="hidden" name="back" value="{{ here() }}">
+          <button class="btn sec sm">Unban</button>
+        </form>{% endif %}</td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="muted">No bans in the last {{ days }} days.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="muted small" style="margin:0;padding:.7rem 1.1rem">From Fail2ban's database <code>{{ db }}</code>{% if hist|length >= cap %} (only the newest {{ cap }} shown){% endif %}. Fail2ban deletes entries older than its <code>dbpurgeage</code>. Times in {{ tzname }}.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Admin actions</h2>
+  <div class="search">{{ ic('search') }}<input type="search" placeholder="Filter by action, IP or detail" data-filter="#audit-table" aria-label="Filter admin actions"></div>
+  <table class="stack" id="audit-table">
+    <thead><tr><th>Time</th><th>Action</th><th>On</th><th>Details</th><th>By</th></tr></thead>
+    <tbody>
+    {% for a in audit %}
+    <tr>
+      <td data-label="Time">{{ a.when|when }}</td>
+      <td data-label="Action">{% if a.action.startswith('Sign-in failed') or a.action.startswith('Sign-in blocked') or 'failed' in a.action %}<span class="tag bad">{{ a.action }}</span>{% elif a.action in ('Banned',) %}<span class="tag warn">{{ a.action }}</span>{% else %}{{ a.action }}{% endif %}</td>
+      <td data-label="On" style="overflow-wrap:anywhere">{{ a.target }}</td>
+      <td data-label="Details" style="overflow-wrap:anywhere" class="small">{{ a.detail }}</td>
+      <td data-label="By">{{ a.admin or 'not signed in' }}{% if a.via %} <span class="muted">({{ a.via }})</span>{% endif %}<br><span class="muted small">{{ a.ip }}</span></td>
+    </tr>
+    {% else %}<tr><td colspan="5" class="muted">Nothing in the last {{ days }} days. Bans, unbans, reloads, restarts, file changes and sign-ins made through this app appear here.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="muted small" style="margin:.75rem 0 0">{{ audit|length }} actions from the last {{ days }} days{% if audit_capped %} (only the newest {{ cap }} shown){% endif %}, from <code>{{ audit_file }}</code>.</p>
+</div>
+{% endblock %}

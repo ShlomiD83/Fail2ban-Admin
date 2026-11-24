@@ -1,0 +1,23 @@
+{% from "_icons.html" import ic %}
+{% macro reload_btn(label='Reload Fail2ban', jail='', cls='btn', back=None, confirm=None, title=None) -%}
+<form method="post" action="{{ url_for('reload') }}" class="inline"{% if confirm %} data-confirm="{{ confirm }}"{% endif %}>
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ back or here() }}">
+  {% if jail %}<input type="hidden" name="jail" value="{{ jail }}">{% endif %}
+  <button class="{{ cls }}"{% if title %} title="{{ title }}" aria-label="{{ title }}"{% endif %}>{{ ic('reload') }}{{ label }}</button>
+</form>
+{%- endmacro %}
+{% macro restart_btn(label='Restart container', cls='btn sec', back=None) -%}
+<form method="post" action="{{ url_for('restart') }}" class="inline" data-confirm="Restart the Fail2ban container ({{ container_name }})? It is unprotected for a few seconds while it starts.">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ back or here() }}">
+  <button class="{{ cls }}">{{ ic('power') }}{{ label }}</button>
+</form>
+{%- endmacro %}
+{% macro pending_banner(pending) -%}
+{% if pending %}
+<div class="banner" role="status">
+  <span><b>Configuration changed</b> ({{ pending|when|lower }}) after Fail2ban last loaded it. Reload to apply the changes; bans are kept.</span>
+  {{ reload_btn(cls='btn sm') }}
+  {{ restart_btn(cls='btn sec sm') }}
+</div>
+{% endif %}
+{%- endmacro %}

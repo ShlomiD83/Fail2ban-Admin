@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{% from "_apply.html" import reload_btn, restart_btn, pending_banner %}
+{% block body %}
+<div class="pagehead"><h1>Jails &amp; Bans</h1>
+  {{ reload_btn('Reload all', cls='btn sec', confirm='Reload all jails? Bans are kept.') }}
+  {{ restart_btn() }}
+</div>
+{{ pending_banner(pending) }}
+{% if st.error %}
+{% if st.starting is none %}<div class="flash error">{{ st.error }}</div>{% endif %}
+{% else %}
+<div class="dash2">
+  <div class="card accent" style="margin:0">
+    <h2>{{ ic('ban') }} Ban IP addresses</h2>
+    <form method="post" action="{{ url_for('ban') }}" data-confirm="Ban these addresses?">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label for="ban-ips" style="margin-top:0">IP addresses or networks (one per line, or separated by spaces or commas)</label>
+      <textarea id="ban-ips" name="ips" class="short" style="min-height:4.5rem" placeholder="203.0.113.7&#10;198.51.100.0/24" required spellcheck="false"></textarea>
+      <div class="inline-form" style="margin-top:.6rem">
+        <div><label for="ban-jail">Jail</label>
+          <select id="ban-jail" name="jail">{% for j in st.jails %}<option>{{ j }}</option>{% endfor %}</select></div>
+        <button class="btn bad">{{ ic('ban') }}Ban</button>
+      </div>
+      <label class="chk" style="margin-top:.6rem" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>
+      <label class="chk" style="margin-top:.3rem" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>
+      <p class="muted small" style="margin:.5rem 0 0">Your address is <span class="ip">{{ your_ip }}</span>. Banning runs every action of the chosen jail (firewall, Cloudflare, mail, AbuseIPDB report…), exactly like <code>fail2ban-client set &lt;jail&gt; banip</code>, and lasts the jail's bantime.</p>
+    </form>
+  </div>
+  <div class="card" style="margin:0">
+    <h2>{{ ic('unlock') }} Unban IP addresses</h2>
+    <form method="post" action="{{ url_for('unban') }}" data-confirm="Unban these addresses?">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label for="unban-ips" style="margin-top:0">IP addresses (the jail's unban actions run too: firewall rules removed, AbuseIPDB cleared…)</label>
+      <textarea id="unban-ips" name="ips" class="short" style="min-height:4.5rem" placeholder="203.0.113.7" required spellcheck="false"></textarea>
+      <div class="inline-form" style="margin-top:.6rem">
+        <div><label for="unban-jail">From</label>
+          <select id="unban-jail" name="jail"><option value="*">all jails</option>{% for j in st.jails %}<option>{{ j }}</option>{% endfor %}</select></div>
+        <button class="btn">{{ ic('unlock') }}Unban</button>
+      </div>
+    </form>
+    <form method="get" action="{{ url_for('lookup') }}" style="margin-top:1rem">
+      <label for="lk" style="margin-top:0">Look up an IP: is it banned here, where and why, or its reputation on AbuseIPDB</label>
+      <div class="row keep" style="margin:0"><input type="search" id="lk" name="ip" class="grow" placeholder="203.0.113.7" required>
+        <button class="btn sec">{{ ic('search') }}Look up</button>
+        <button type="button" class="btn sec" data-abuseipdb="#lk" title="Open this IP's report on abuseipdb.com in a new tab">AbuseIPDB ↗</button></div>
+      <p class="msg" id="lk-msg" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1rem">
+  <h2>Jails <span class="tag mut">{{ st.jails|length }}</span> {% if st.version %}<span class="muted small" style="font-weight:400">Fail2ban {{ st.version }}</span>{% endif %}</h2>
+  <table class="stack">
+    <thead><tr><th>Jail</th><th class="num">Banned now</th><th class="num">Total banned</th><th class="num">Failing now</th><th class="num">Total failures</th><th>Watching</th><th></th></tr></thead>
+    <tbody>
+    {% for j in st.jails %}{% set s = st.status.get(j, {}) %}
+    <tr>
+      <td data-label="Jail"><a href="{{ url_for('jail', name=j) }}"><b>{{ j }}</b></a></td>
+      {% if s.error %}<td colspan="5"><span class="tag bad">{{ s.error }}</span></td>{% else %}
+      <td data-label="Banned now" class="num"><span class="tag {{ 'bad' if s.banned_now else 'mut' }}">{{ s.banned_now }}</span></td>
+      <td data-label="Total banned" class="num">{{ s.banned_total }}</td>
+      <td data-label="Failing now" class="num">{{ s.failed_now }}</td>
+      <td data-label="Total failures" class="num">{{ s.failed_total }}</td>
+      <td data-label="Watching" class="small muted">{{ s.files|length }} log file{{ 's' if s.files|length != 1 }}</td>
+      {% endif %}
+      <td class="acts"><a class="btn sec sm" href="{{ url_for('jail', name=j) }}">Open</a> {{ reload_btn('Reload', jail=j, cls='btn sec sm') }}</td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="muted">No jails are running. Enable one in a jail file (enabled = true) and reload.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
