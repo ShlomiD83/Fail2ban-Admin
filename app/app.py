@@ -546,10 +546,19 @@ def newest_change():
 
 
 def overlay_names(text_dir):
-    """Names of the editable files in a folder (for completion lists)."""
+    """The names jails use for the files in a folder (for completion and the editor's checks): 'iptables' for
+    iptables.conf / iptables.local, but 'smtp.py' for smtp.py, since Fail2ban refers to Python actions with
+    their extension (action = smtp.py[...])."""
     try:
-        return sorted({os.path.splitext(n)[0] for n in os.listdir(text_dir)
-                       if n.endswith((".conf", ".local", ".py")) and not n.startswith(".")}, key=str.lower)
+        names = set()
+        for n in os.listdir(text_dir):
+            if n.startswith("."):
+                continue
+            if n.endswith(".py"):
+                names.add(n)
+            elif n.endswith((".conf", ".local")):
+                names.add(os.path.splitext(n)[0])
+        return sorted(names, key=str.lower)
     except OSError:
         return []
 

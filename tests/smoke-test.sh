@@ -185,6 +185,7 @@ check "unban in all jails" bash -c "! docker exec $F2B fail2ban-client get smoke
 
 echo "Editor"
 get "/files/edit?path=jail.d/smoke.local"; T="$(csrf)"; BASE="$(base)"
+check "Python actions are known by their .py name (action = smtp.py[...])" bash -c "grep -q '\"smtp.py\"' '$WORK/body' && grep -q '\"iptables\"' '$WORK/body'"
 BAD=$'[smoke]\nenabled = true\nfilter = no-such-filter\naction = dummy\nlogpath = /log/smoke.log\n'
 post /files/edit -d csrf="$T" -d path=jail.d/smoke.local -d base="$BASE" -d action=save --data-urlencode "content=$BAD"
 check "save with an unknown filter is refused" body_has "Not saved: Fail2ban"

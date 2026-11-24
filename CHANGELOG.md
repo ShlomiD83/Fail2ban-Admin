@@ -5,6 +5,10 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Fixed
+- The editor no longer warns about Python actions (`action = smtp.py[...]`): they are known by their `.py` name,
+  as Fail2ban refers to them, and autocomplete offers them that way.
+
 ### Changed
 - The panel runs as a normal user: `PUID` / `PGID` in `.env` set the user and group (root when unset). It only
   needs write access to Fail2ban's jail.d, filter.d and action.d folders; the README explains how to check them,
