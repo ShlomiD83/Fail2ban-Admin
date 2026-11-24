@@ -627,3 +627,15 @@ document.addEventListener("submit", function (e) {
   t.textContent = what + " Bans are kept.";
   holder.insertBefore(t, holder.firstChild);
 });
+
+// ---- "Fail2ban is restarting" card: count the seconds live (the page itself may not refresh) ----
+document.addEventListener("DOMContentLoaded", function () {
+  var spans = document.querySelectorAll("[data-count-from]");
+  if (!spans.length) return;
+  var t0 = Date.now();
+  setInterval(function () {
+    spans.forEach(function (s) {
+      s.textContent = (parseInt(s.getAttribute("data-count-from"), 10) || 0) + Math.floor((Date.now() - t0) / 1000);
+    });
+  }, 1000);
+});

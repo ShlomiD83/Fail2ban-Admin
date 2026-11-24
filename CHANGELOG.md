@@ -5,6 +5,11 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Fixed
+- The "Fail2ban is restarting" card counts the seconds live instead of staying at 0 s.
+
+## 2026.11.24-2141
+
 ### Added
 - While Fail2ban restarts, the dashboard and the jail pages show a "Fail2ban is restarting" card instead of a
   blank page, and refresh themselves; Reload and Restart show a "working" message as soon as they are clicked.

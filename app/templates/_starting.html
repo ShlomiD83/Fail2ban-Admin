@@ -4,7 +4,7 @@
   <span class="spin" aria-hidden="true"></span>
   <div>
     <h2>Fail2ban is restarting…</h2>
-    <p class="muted">It's been {{ st.starting }} s. This page refreshes by itself as soon as Fail2ban answers again.
+    <p class="muted">It's been <span data-count-from="{{ st.starting }}">{{ st.starting }}</span> s. This page refreshes by itself as soon as Fail2ban answers again.
       Bans are kept: Fail2ban restores them from its database.</p>
   </div>
 </div>
