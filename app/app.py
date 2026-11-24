@@ -2281,8 +2281,8 @@ def file_error(e):
     reason = e.strerror or str(e)
     hint = ""
     if isinstance(e, PermissionError):
-        hint = (" Check that this container's user (%s) can write the Fail2ban folder and the admin folder. "
-                "Fail2ban's own files usually belong to root, so the usual setting is user: \"0:0\"."
+        hint = (" This container runs as %s (PUID:PGID). That user or group needs write access to the folder: "
+                "check it with ls -ldn, and see \"Running as a normal user\" in the README."
                 % app.jinja_env.globals["uid_gid"])
     msg = f"Nothing was changed: couldn't access {where} ({reason}).{hint}"
     if request.is_json or request.headers.get("X-CSRF-Token"):

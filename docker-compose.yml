@@ -37,8 +37,8 @@ services:
     depends_on: [socket-proxy]
     ports:
       - "127.0.0.1:8081:8080"             # put it behind a TLS reverse proxy; don't expose it to the internet
-    # root: Fail2ban's files belong to root (no Docker socket here, so this doesn't grant Docker access)
-    user: "0:0"
+    # a user and group that can write Fail2ban's folders and ./admin (PUID/PGID in .env; root when unset)
+    user: "${PUID:-0}:${PGID:-0}"
     networks: [default, docker-proxy]     # default: internet for the public-IP lookup; docker-proxy: the proxy
     environment:
       DOCKER_HOST: tcp://socket-proxy:2375

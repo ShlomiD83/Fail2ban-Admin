@@ -6,6 +6,9 @@ entries are headed by build date rather than by version.
 ## Unreleased
 
 ### Changed
+- The panel runs as a normal user: `PUID` / `PGID` in `.env` set the user and group (root when unset). It only
+  needs write access to Fail2ban's jail.d, filter.d and action.d folders; the README explains how to check them,
+  and a "Permission denied" message now points there.
 - `docker-compose.yml` pulls the published image (`romekd/fail2ban-admin`, or the GHCR one) instead of building it;
   the README says where the images are and how to build your own.
 

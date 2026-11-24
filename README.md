@@ -72,7 +72,9 @@ every build is smoke-tested on both architectures against a real Fail2ban contai
    - `FAIL2BAN_CONTAINER`: your Fail2ban container's name (`docker ps`)
    - `FAIL2BAN_DATA`: its configuration folder on the host
    - `DOCKER_GID`: the Docker socket's group id (`getent group docker | cut -d: -f3`)
-2. In `docker-compose.yml` set `ADMIN_USER`, the password and `SECRET_KEY` (`openssl rand -hex 32`)
+   - `PUID` / `PGID`: the user and group the panel runs as (see [Running as a normal user](#running-as-a-normal-user))
+2. In `docker-compose.yml` set `ADMIN_USER`, the password and `SECRET_KEY` (`openssl rand -hex 32`), and create
+   the panel's folder for that user: `mkdir -p admin && sudo chown <PUID>:<PGID> admin`
 3. `docker compose up -d` (pulls the published image; to build it yourself, clone the repository and use
    `build: .` instead of `image:`)
 4. Open `http://127.0.0.1:8081` (or your reverse proxy address) and sign in
@@ -159,8 +161,26 @@ existing files and new jail files only need a reload.
 - The Tecnativa docker-socket-proxy isn't a good fit: allowing `exec` there means allowing every POST, including
   creating containers. wollomatic/socket-proxy filters each request path by regex instead.
 - Action files often hold API keys. They're blurred on screen; exports and backups contain them in clear text.
-- Running as root (`user: "0:0"`) is the simple choice because Fail2ban's files belong to root. Files keep their
-  owner and permissions when saved.
+- The panel doesn't need root: see the next section.
+
+## Running as a normal user
+
+The panel only needs to write Fail2ban's `jail.d`, `filter.d` and `action.d` folders and its own `admin` folder.
+It saves a file by writing a new copy and swapping it in, so it needs write access to the **folder**, not to each
+file: a root-owned file in a group-writable folder can still be saved. The new copy keeps the file's permissions
+and group, and Fail2ban (which runs as root) reads it as before.
+
+Check the folders: `ls -ldn /path/to/fail2ban/data/jail.d /path/to/fail2ban/data/filter.d /path/to/fail2ban/data/action.d`
+
+| What `ls -ldn` shows | `PUID` / `PGID` in `.env` |
+|---|---|
+| `drwxrwsr-x 0 100` (group-writable, e.g. group `users`) | your user id (`id -u`) and that group, e.g. `1000` / `100` |
+| `drwxr-xr-x 1000 1000` (owned by your user) | your user id and group (`id -u`, `id -g`) |
+| `drwxr-xr-x 0 0` (only root may write) | give the folders a group first: `sudo chgrp 100 jail.d filter.d action.d && sudo chmod 2775 jail.d filter.d action.d`, or leave `PUID`/`PGID` out to run as root |
+
+Then give the panel's own folder to that user: `mkdir -p admin && sudo chown <PUID>:<PGID> admin`.
+
+If a save fails with "Permission denied", the panel names the folder it couldn't write.
 
 ## Development
 
