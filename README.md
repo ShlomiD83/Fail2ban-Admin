@@ -11,7 +11,10 @@ history, from your browser (phone included).
 
 It talks to your Fail2ban container through the Docker API, the same way `docker exec <container> fail2ban-client …`
 does, so it works with the common images (built and tested with [crazymax/fail2ban](https://github.com/crazy-max/docker-fail2ban)).
-Runs as a single container on a distroless runtime image, for **amd64 and arm64**.
+Runs as a single container on a distroless runtime image. A prebuilt multi-arch image for **amd64 and arm64** is
+published on Docker Hub as [`romekd/fail2ban-admin`](https://hub.docker.com/r/romekd/fail2ban-admin) and on GHCR as
+[`ghcr.io/shlomid83/fail2ban-admin`](https://github.com/ShlomiD83/fail2ban-admin/pkgs/container/fail2ban-admin);
+every build is smoke-tested on both architectures against a real Fail2ban container before it is published.
 
 ## Features
 
@@ -64,12 +67,14 @@ Runs as a single container on a distroless runtime image, for **amd64 and arm64*
 
 ## Quick start
 
-1. Clone the repository and copy `.env.example` to `.env`. Set:
+1. Download [`docker-compose.yml`](docker-compose.yml) and [`.env.example`](.env.example) into a folder, and copy
+   `.env.example` to `.env`. Set:
    - `FAIL2BAN_CONTAINER`: your Fail2ban container's name (`docker ps`)
    - `FAIL2BAN_DATA`: its configuration folder on the host
    - `DOCKER_GID`: the Docker socket's group id (`getent group docker | cut -d: -f3`)
 2. In `docker-compose.yml` set `ADMIN_USER`, the password and `SECRET_KEY` (`openssl rand -hex 32`)
-3. `docker compose up -d --build`
+3. `docker compose up -d` (pulls the published image; to build it yourself, clone the repository and use
+   `build: .` instead of `image:`)
 4. Open `http://127.0.0.1:8081` (or your reverse proxy address) and sign in
 
 ## Docker access

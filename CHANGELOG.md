@@ -5,6 +5,14 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Changed
+- `docker-compose.yml` pulls the published image (`romekd/fail2ban-admin`, or the GHCR one) instead of building it;
+  the README says where the images are and how to build your own.
+
+## 2026.11.24-1959
+
+First published image (amd64 and arm64, Docker Hub and GHCR).
+
 ### Added
 - First version, with a top-bar layout: section tabs, IP lookup, reload, restart and the user menu in the bar, and a status strip (Fail2ban running and up to date, configuration check, public IP) on every page.
 - Dashboard: a "needs attention" bar (configuration changed since the last reload, a failing configuration

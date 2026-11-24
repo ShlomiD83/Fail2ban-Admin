@@ -30,8 +30,8 @@ services:
       - "-shutdowngracetime=5"
 
   fail2ban-admin:
-    build: .
-    image: fail2ban-admin:latest          # or romekd/fail2ban-admin:latest once it's published
+    image: romekd/fail2ban-admin:latest   # or ghcr.io/shlomid83/fail2ban-admin:latest (amd64 and arm64)
+    # build: .                            # to build it yourself from this repository instead
     container_name: fail2ban-admin
     restart: unless-stopped
     depends_on: [socket-proxy]
