@@ -11,7 +11,7 @@ services:
     image: wollomatic/socket-proxy:1
     container_name: fail2ban-admin-socket-proxy
     restart: unless-stopped
-    user: "65534:${DOCKER_GID:?set DOCKER_GID in .env (getent group docker | cut -d: -f3)}"
+    user: "65534:${DOCKER_GID:?set DOCKER_GID in .env (stat -c %g /var/run/docker.sock)}"
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

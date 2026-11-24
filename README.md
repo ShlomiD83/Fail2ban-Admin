@@ -71,7 +71,7 @@ every build is smoke-tested on both architectures against a real Fail2ban contai
    `.env.example` to `.env`. Set:
    - `FAIL2BAN_CONTAINER`: your Fail2ban container's name (`docker ps`)
    - `FAIL2BAN_DATA`: its configuration folder on the host
-   - `DOCKER_GID`: the Docker socket's group id (`getent group docker | cut -d: -f3`)
+   - `DOCKER_GID`: the Docker socket's group id (`stat -c %g /var/run/docker.sock`)
    - `PUID` / `PGID`: the user and group the panel runs as (see [Running as a normal user](#running-as-a-normal-user))
 2. In `docker-compose.yml` set `ADMIN_USER`, the password and `SECRET_KEY` (`openssl rand -hex 32`), and create
    the panel's folder for that user: `mkdir -p admin && sudo chown <PUID>:<PGID> admin`
