@@ -5,7 +5,13 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Added
+- While Fail2ban restarts, the dashboard and the jail pages show a "Fail2ban is restarting" card instead of a
+  blank page, and refresh themselves; Reload and Restart show a "working" message as soon as they are clicked.
+- The socket proxy in `docker-compose.yml` has a health check (healthy/unhealthy in Portainer and `docker ps`).
+
 ### Fixed
+- Opening a jail's page during a reload no longer sends you back to the list with "no running jail".
 - The editor no longer warns about Python actions (`action = smtp.py[...]`): they are known by their `.py` name,
   as Fail2ban refers to them, and autocomplete offers them that way.
 

@@ -2,10 +2,11 @@
 {% from "_icons.html" import ic %}
 {% from "_apply.html" import reload_btn %}
 {% from "_ipinfo.html" import iptags %}
+{% from "_starting.html" import starting_card %}
 {% block body %}
 <div class="dhead"><div><h1>Dashboard</h1><p class="muted" style="margin:.1rem 0 0">{{ now_text }} · {{ tzname }}</p></div></div>
 {% include "_audit_problem.html" %}
-{% if st.error and st.starting is none %}<div class="flash error">{{ st.error }}</div>{% endif %}
+{% if st.error and st.starting is none %}<div class="flash error">{{ st.error }}</div>{% elif st.starting is not none %}{{ starting_card(st) }}{% endif %}
 
 {% if attention %}
 <div class="attn" role="status">

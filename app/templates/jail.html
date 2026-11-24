@@ -2,6 +2,7 @@
 {% from "_icons.html" import ic %}
 {% from "_apply.html" import reload_btn %}
 {% from "_ipinfo.html" import iptags %}
+{% from "_starting.html" import starting_card %}
 {% block body %}
 <p class="crumbs"><a href="{{ url_for('jails') }}">Jails &amp; Bans</a> /</p>
 <div class="pagehead"><h1>{{ name }}</h1>
@@ -9,7 +10,7 @@
   {{ reload_btn('Reload jail', jail=name, cls='btn sec', confirm='Reload the jail ' ~ name ~ '? Bans are kept.') }}
 </div>
 {% if error %}
-{% if st.starting is none %}<div class="flash error">{{ error }}</div>{% endif %}
+{% if st.starting is none %}<div class="flash error">{{ error }}</div>{% else %}{{ starting_card(st) }}{% endif %}
 {% else %}
 <div class="stats">
   <div class="stat"><span>Banned now</span><b>{{ status.banned_now }}</b></div>

@@ -21,6 +21,7 @@ services:
     networks: [docker-proxy]
     command:
       - "-listenip=0.0.0.0"
+      - "-allowhealthcheck"                 # answers /health on localhost:55555 inside the container
       - "-allowfrom=fail2ban-admin"         # only the admin container may connect
       # the proxy matches the whole path (it adds ^ and $ itself)
       - "-allowGET=/(v1\\.[0-9]+/)?(version|containers/${FAIL2BAN_CONTAINER}/json|exec/[0-9a-f]+/json)"
@@ -28,6 +29,12 @@ services:
       - "-watchdoginterval=3600"
       - "-stoponwatchdog"
       - "-shutdowngracetime=5"
+    healthcheck:                            # shown as healthy/unhealthy in Portainer and docker ps
+      test: ["CMD", "/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   fail2ban-admin:
     image: romekd/fail2ban-admin:latest   # or ghcr.io/shlomid83/fail2ban-admin:latest (amd64 and arm64)

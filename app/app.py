@@ -1598,6 +1598,12 @@ def jail(name):
     if st["error"]:
         return render_template("jail.html", page="jails", name=name, st=st, error=st["error"])
     if name not in st["jails"]:
+        # during a reload a jail disappears for a moment while Fail2ban sets it up again: look once more
+        time.sleep(1.5)
+        st = f2b_state(with_status=False)
+        if st["error"]:
+            return render_template("jail.html", page="jails", name=name, st=st, error=st["error"])
+    if name not in st["jails"]:
         flash(f"There's no running jail called '{name}'. It may be disabled, or Fail2ban hasn't been reloaded "
               "since it was added.", "error")
         return redirect(url_for("jails"))

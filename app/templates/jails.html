@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_icons.html" import ic %}
 {% from "_apply.html" import reload_btn, restart_btn, pending_banner %}
+{% from "_starting.html" import starting_card %}
 {% block body %}
 <div class="pagehead"><h1>Jails &amp; Bans</h1>
   {{ reload_btn('Reload all', cls='btn sec', confirm='Reload all jails? Bans are kept.') }}
@@ -8,7 +9,7 @@
 </div>
 {{ pending_banner(pending) }}
 {% if st.error %}
-{% if st.starting is none %}<div class="flash error">{{ st.error }}</div>{% endif %}
+{% if st.starting is none %}<div class="flash error">{{ st.error }}</div>{% else %}{{ starting_card(st) }}{% endif %}
 {% else %}
 <div class="dash2">
   <div class="card accent" style="margin:0">

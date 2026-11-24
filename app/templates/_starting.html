@@ -1,0 +1,11 @@
+{# Shown in place of a page's content while Fail2ban is restarting (the page refreshes itself, see base.html). #}
+{% macro starting_card(st) -%}
+<div class="card starting" role="status">
+  <span class="spin" aria-hidden="true"></span>
+  <div>
+    <h2>Fail2ban is restarting…</h2>
+    <p class="muted">It's been {{ st.starting }} s. This page refreshes by itself as soon as Fail2ban answers again.
+      Bans are kept: Fail2ban restores them from its database.</p>
+  </div>
+</div>
+{%- endmacro %}

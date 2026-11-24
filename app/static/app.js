@@ -608,3 +608,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }, Promise.resolve()).catch(function () { tags.forEach(function (t) { t.textContent = "?"; t.title = "AbuseIPDB score unavailable"; }); });
 });
+
+// ---- Reload / Restart: show that it's working right away, instead of a page that looks frozen ----
+// (runs after the confirmation prompt; a cancelled prompt has already prevented the submit)
+document.addEventListener("submit", function (e) {
+  var f = e.target;
+  if (e.defaultPrevented || !f.action) return;
+  var path = new URL(f.action, location.href).pathname;
+  var what = path === "/reload" ? ((f.querySelector('input[name="jail"]') || {}).value ? "Reloading jail " + f.querySelector('input[name="jail"]').value + "…" : "Reloading Fail2ban…")
+           : path === "/restart" ? "Restarting the Fail2ban container…" : null;
+  if (!what) return;
+  f.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
+  var holder = document.getElementById("toasts");
+  if (!holder) return;
+  var t = document.createElement("div");
+  t.className = "flash wait";
+  t.setAttribute("role", "status");
+  t.textContent = what + " Bans are kept.";
+  holder.insertBefore(t, holder.firstChild);
+});
