@@ -38,6 +38,9 @@ cp -r "$HERE"/fixtures/data/. "$DATA"/
 cp -r "$HERE"/fixtures/log/. "$LOGS"/
 chmod -R a+rwX "$DATA" "$LOGS" "$ADMIN"
 ADMIN_PW="smoke-$(openssl rand -hex 8)"
+# throwaway TOTP secret for this run only: 24 base32 characters (A-P from random hex, then fixed letters)
+TOTP_SECRET="$(openssl rand -hex 8 | tr '0-9a-f' 'A-P')QRSTUVWX"
+TOTP_SECRET="$(openssl rand -hex 10 | tr "0-9a-f" "A-P" | head -c 16)QRSTUVWX"   # throwaway base32 test secret
 
 cleanup() {
   if [ "$FAILED" -gt 0 ]; then
@@ -89,7 +92,8 @@ fi
 
 echo "Starting $IMAGE ($MODE)"
 docker run -d --name "$NAME" -p "127.0.0.1:${PORT}:8080" --user 0:0 \
-  -e ADMIN_USER=admin -e ADMIN_PASSWORD="$ADMIN_PW" -e SECRET_KEY="$(openssl rand -hex 32)" \
+  -e ADMIN_USER=admin -e ADMIN_PASSWORD="$ADMIN_PW" -e ADMIN_TOTP_SECRET="$TOTP_SECRET" \
+  -e SECRET_KEY="$(openssl rand -hex 32)" \
   -e TZ=Asia/Jerusalem -e FAIL2BAN_CONTAINER="$F2B" -e PUBLIC_IP_URL=off -e UPDATE_CHECK=off \
   "${DOCKER_ACCESS[@]}" \
   -v "$(winpath "$DATA"):/data" -v "$(winpath "$LOGS"):/log:ro" -v "$(winpath "$ADMIN"):/admin" \
@@ -128,6 +132,15 @@ csrf() { grep -o 'name="csrf" value="[^"]*"' "$WORK/body" | head -1 | sed 's/.*v
 base() { grep -o 'name="base" value="[^"]*"' "$WORK/body" | head -1 | sed 's/.*value="//; s/"$//'; }
 body_has() { grep -q -- "$1" "$WORK/body"; }
 status_is() { awk '{print $2}' "$WORK/url" | grep -qx -- "$1"; }
+# the current TOTP code for TOTP_SECRET, computed like an authenticator app (RFC 6238, SHA-1, 6 digits, 30 s)
+totp_now() {
+  docker exec "$NAME" /usr/bin/python -c "import base64, hashlib, hmac, struct, time
+k = base64.b32decode('$TOTP_SECRET')
+h = hmac.new(k, struct.pack('>Q', int(time.time() // 30)), hashlib.sha1).digest()
+o = h[-1] & 15
+print('%06d' % ((struct.unpack('>I', h[o:o + 4])[0] & 0x7fffffff) % 1000000))"
+}
+totp_wrong() { local c; c="$(totp_now)"; printf '%06d' $(( (10#$c + 500000) % 1000000 )); }   # never the right one
 
 echo "Sign-in"
 get /jails
@@ -137,7 +150,22 @@ post /login --data-urlencode "csrf=$T" -d username=admin --data-urlencode "passw
 check "wrong password is refused" body_has "Invalid credentials"
 get /login; T="$(csrf)"
 post /login --data-urlencode "csrf=$T" -d username=admin --data-urlencode "password=$ADMIN_PW"
-check "sign-in lands on the dashboard" body_has "<h1>Dashboard</h1>"
+check "TOTP: the right password alone leads to the code step" bash -c "grep -q 'Two-step check' '$WORK/body' && ! grep -q '<h1>Dashboard</h1>' '$WORK/body'"
+T="$(csrf)"
+post /login/totp --data-urlencode "csrf=$T" -d code="$(totp_wrong)"
+check "TOTP: a wrong code is refused" body_has "didn&#39;t work"
+CODE="$(totp_now)"
+T="$(csrf)"
+post /login/totp --data-urlencode "csrf=$T" -d code="$CODE"
+check "TOTP: the right code signs in and lands on the dashboard" body_has "<h1>Dashboard</h1>"
+# the same code once more, in a second browser session: it must not work twice
+J2="$WORK/cookies2"
+curl -s -b "$J2" -c "$J2" -o "$WORK/b2" "$B/login"
+T2="$(grep -o 'name="csrf" value="[^"]*"' "$WORK/b2" | head -1 | sed 's/.*value="//; s/"$//')"
+curl -s -L -b "$J2" -c "$J2" -o "$WORK/b2" --data-urlencode "csrf=$T2" -d username=admin --data-urlencode "password=$ADMIN_PW" "$B/login"
+T2="$(grep -o 'name="csrf" value="[^"]*"' "$WORK/b2" | head -1 | sed 's/.*value="//; s/"$//')"
+curl -s -L -b "$J2" -c "$J2" -o "$WORK/b2" --data-urlencode "csrf=$T2" -d code="$CODE" "$B/login/totp"
+check "TOTP: a code that was already used is refused" bash -c "grep -q 'didn&#39;t work' '$WORK/b2' && ! grep -q '<h1>Dashboard</h1>' '$WORK/b2'"
 post /reload -d csrf=wrong
 check "a POST with a wrong CSRF token is refused" body_has "out of date"
 
