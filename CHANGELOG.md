@@ -6,7 +6,7 @@ entries are headed by build date rather than by version.
 ## Unreleased
 
 ### Changed
-- Dashboard: the ban/unban box is its own slim card above Banned now, across the full width, instead of
+- Dashboard: the ban/unban box is its own slim card directly above Banned now, the same width, instead of
   sitting inside the Banned now card.
 
 ## 2026.11.25-1420
