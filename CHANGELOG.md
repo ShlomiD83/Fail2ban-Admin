@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.25-0608
 
 ### Changed
 - New colour scheme, "Charcoal and crimson", in light and dark: neutral greys, a near-black top bar and one
