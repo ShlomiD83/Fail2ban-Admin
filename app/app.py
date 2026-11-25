@@ -1410,7 +1410,12 @@ def ban_reason(h):
     if h.get("count") and h["count"] > 1:
         why = f"ban #{h['count']} · " + why
     if h.get("matches"):
-        why += " · " + h["matches"][-1].strip()[-110:]
+        line = h["matches"][-1].strip()
+        if len(line) > 110:
+            # keep the end of the line (its start is mostly a timestamp), cut at a word boundary, mark the cut
+            tail = line[-110:]
+            line = "…" + (tail.split(" ", 1)[1] if " " in tail else tail)
+        why += " · " + line
     return why
 
 

@@ -11,6 +11,11 @@ entries are headed by build date rather than by version.
 
 ### Fixed
 - Phones: the status strip (Fail2ban, Config, Public IP) is centred, so the wrapped Public IP line lines up.
+- The log excerpt in Recent activity and the ban history is cut at a word, marked with …, instead of
+  mid-word (for example "sword mismatch").
+
+### Added
+- Screenshots in the README (from a demo setup with documentation IP addresses).
 
 ## 2026.11.25-1432
 

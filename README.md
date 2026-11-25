@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ShlomiD83/fail2ban-admin/main/docs/logo-dark.svg">
-    <img src="https://raw.githubusercontent.com/ShlomiD83/fail2ban-admin/main/docs/logo-light.svg" alt="Fail2ban Admin" width="380">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/logo-light.svg" alt="Fail2ban Admin" width="380">
   </picture>
 </p>
 
@@ -13,8 +13,28 @@ It talks to your Fail2ban container through the Docker API, the same way `docker
 does, so it works with the common images (built and tested with [crazymax/fail2ban](https://github.com/crazy-max/docker-fail2ban)).
 Runs as a single container on a distroless runtime image. A prebuilt multi-arch image for **amd64 and arm64** is
 published on Docker Hub as [`romekd/fail2ban-admin`](https://hub.docker.com/r/romekd/fail2ban-admin) and on GHCR as
-[`ghcr.io/shlomid83/fail2ban-admin`](https://github.com/ShlomiD83/fail2ban-admin/pkgs/container/fail2ban-admin);
+[`ghcr.io/shlomid83/fail2ban-admin`](https://github.com/ShlomiD83/Fail2ban-Admin/pkgs/container/fail2ban-admin);
 every build is smoke-tested on both architectures against a real Fail2ban container before it is published.
+
+## Screenshots
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/dashboard-dark.png">
+    <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/dashboard-light.png" alt="Dashboard: ban box, banned IPs, jails, bans over time and recent activity" width="100%">
+  </picture>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/jail-dark.png" alt="A jail: its settings in force, a ban form and the banned IPs" width="49%">
+  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/editor-dark.png" alt="Editing a filter with syntax highlighting and validation" width="49%">
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/mobile-dark.png" alt="The dashboard on a phone" width="260">
+</p>
+
+<sub>Screenshots from a demo setup: the addresses are from the documentation ranges reserved by RFC 5737.</sub>
 
 ## Features
 
