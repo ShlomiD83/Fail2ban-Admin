@@ -11,6 +11,8 @@ entries are headed by build date rather than by version.
   stack when the card is narrow). On phones each ban reads IP, then jail · since · expires, then the buttons,
   with nothing cut off or overlapping.
 - The dashboard ban box keeps the address field, jail, Ban and Unban on one line in a narrower card.
+- Top offenders: the bar under each IP (its ban count compared with the top offender) is a thin grey line
+  instead of a thick crimson one.
 
 ## 2026.11.25-0622
 
