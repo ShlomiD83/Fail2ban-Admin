@@ -16,25 +16,7 @@ published on Docker Hub as [`romekd/fail2ban-admin`](https://hub.docker.com/r/ro
 [`ghcr.io/shlomid83/fail2ban-admin`](https://github.com/ShlomiD83/Fail2ban-Admin/pkgs/container/fail2ban-admin);
 every build is smoke-tested on both architectures against a real Fail2ban container before it is published.
 
-## Screenshots
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/dashboard-dark.png">
-    <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/dashboard-light.png" alt="Dashboard: ban box, banned IPs, jails, bans over time and recent activity" width="100%">
-  </picture>
-</p>
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/jail-dark.png" alt="A jail: its settings in force, a ban form and the banned IPs" width="49%">
-  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/editor-dark.png" alt="Editing a filter with syntax highlighting and validation" width="49%">
-</p>
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ShlomiD83/Fail2ban-Admin/main/docs/screenshots/mobile-dark.png" alt="The dashboard on a phone" width="260">
-</p>
-
-<sub>Screenshots from a demo setup: the addresses are from the documentation ranges reserved by RFC 5737.</sub>
+**[Screenshots](https://github.com/ShlomiD83/Fail2ban-Admin/tree/main/docs/screenshots)**: the dashboard (light and dark), a jail, the editor and the phone view.
 
 ## Features
 

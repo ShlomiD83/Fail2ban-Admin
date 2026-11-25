@@ -15,7 +15,7 @@ entries are headed by build date rather than by version.
   mid-word (for example "sword mismatch").
 
 ### Added
-- Screenshots in the README (from a demo setup with documentation IP addresses).
+- Screenshots in docs/screenshots, linked from the README (from a demo setup with documentation IP addresses).
 
 ## 2026.11.25-1432
 
