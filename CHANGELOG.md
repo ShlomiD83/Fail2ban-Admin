@@ -5,6 +5,10 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Added
+- The sign-in pages have a Theme switch (Auto, Light, Dark) under the sign-in card, in place of the small
+  corner button. Auto follows your device's setting again after you had picked one.
+
 ### Fixed
 - The user menu's "Admin log" item, now called "Admin actions", opens the Activity page at the top of the admin
   actions card instead of partway down the list, with the heading and filter box in view below the top bar.

@@ -26,6 +26,26 @@
     btn.title = label; btn.setAttribute("aria-label", label);
   }
   document.addEventListener("DOMContentLoaded", function () {
+    var picks = document.querySelectorAll("[data-theme-set]");
+    if (picks.length) {
+      var mark = function () {
+        var cur = root.getAttribute("data-theme") || "auto";
+        picks.forEach(function (b) {
+          var on = b.getAttribute("data-theme-set") === cur;
+          b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      };
+      picks.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var v = b.getAttribute("data-theme-set");
+          if (v === "auto") { root.removeAttribute("data-theme"); try { localStorage.removeItem("theme"); } catch (e) {} }
+          else { root.setAttribute("data-theme", v); save(v); }
+          mark();
+        });
+      });
+      mark();
+      return;
+    }
     var btn = document.getElementById("theme-toggle");
     var created = !btn;
     if (created) { btn = document.createElement("button"); btn.id = "theme-toggle"; btn.type = "button"; btn.className = "floating"; }

@@ -324,6 +324,8 @@
   .inline-form { display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap }
   .inline-form label { margin-top:0 }
   .chk { display:inline-flex; align-items:center; gap:.4rem; margin:0; color:var(--fg); font-weight:400 }
+  .themepick { display:flex; justify-content:center; align-items:center; gap:.6rem; margin-top:1.25rem; font-size:.85rem; color:var(--mut) }
+  .themepick .seg button { font-size:.85rem; padding:.3rem .8rem }
   #theme-toggle.floating { position:fixed; right:14px; bottom:14px; width:42px; height:42px; border-radius:50%; border:1px solid var(--bd); background:var(--card); color:var(--fg); font-size:20px; line-height:1; cursor:pointer }
   code { background:color-mix(in srgb, var(--fg) 6%, transparent); padding:.08rem .35rem; border-radius:5px; font-size:.88em }
   /* editor */
@@ -460,11 +462,11 @@
 {% endif %}
 <main>
   {% block body %}{% endblock %}
+  {% if not session.auth %}<div class="themepick">Theme <span class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="auto" title="Follow your device's light or dark setting">Auto</button><button type="button" data-theme-set="light">Light</button><button type="button" data-theme-set="dark">Dark</button></span></div>{% endif %}
   {% if session.auth %}<p class="foot-credit">IP countries: <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a></p>{% endif %}
 </main>
 </div>
 {% if not session.auth %}</div>{% endif %}
-{% if not session.auth %}<button type="button" id="theme-toggle" class="floating"></button>{% endif %}
 <div class="toasts" id="toasts">
   {%- if f2b_starting and not restart_watch %}
   <div class="flash wait" role="status">{{ st.error }}</div>
