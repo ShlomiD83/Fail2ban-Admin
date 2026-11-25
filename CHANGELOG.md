@@ -3,6 +3,15 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Fixed
+- Dashboard, Banned now: the country and AbuseIPDB score sit beside the IP instead of under it, the Why column
+  is gone, and the table fits the card at every window width instead of scrolling sideways (the row buttons
+  stack when the card is narrow). On phones each ban reads IP, then jail · since · expires, then the buttons,
+  with nothing cut off or overlapping.
+- The dashboard ban box keeps the address field, jail, Ban and Unban on one line in a narrower card.
+
 ## 2026.11.25-0622
 
 ### Added

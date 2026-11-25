@@ -37,7 +37,7 @@
       {% if banned %}
       <div class="tscroll">
       <table class="bans">
-        <thead><tr><th>IP</th><th>Jail</th><th>Since</th><th>Expires</th><th>Why</th><th></th></tr></thead>
+        <thead><tr><th>IP</th><th>Jail</th><th>Since</th><th>Expires</th><th></th></tr></thead>
         <tbody>
         {% for b in banned[:8] %}
         <tr>
@@ -45,7 +45,6 @@
           <td class="b-jail"><span class="tag mut">{{ b.jail }}</span></td>
           <td class="b-since">{{ b.start|short }}</td>
           <td class="b-exp">{% if b.bantime is not none and b.bantime < 0 %}<span class="tag bad">never</span>{% else %}{{ b.end|until }}{% endif %}</td>
-          <td class="why b-why">{{ b.why or '–' }}</td>
           <td class="acts">
             <a class="btn sec sm" href="{{ abuseipdb(b.ip) }}" target="_blank" rel="noopener noreferrer" title="Reputation, reports, country and ISP of {{ b.ip }} on abuseipdb.com">AbuseIPDB ↗</a>
             <form method="post" action="{{ url_for('unban') }}" class="inline" data-confirm="Unban {{ b.ip }} in {{ b.jail }}? The jail's unban actions run too.">
