@@ -46,12 +46,12 @@ document.addEventListener("submit", function (e) {
   if (msg && !confirm(msg)) e.preventDefault();
 });
 
-// ---- live filter for tables: <input data-filter="#tableid"> ----
+// ---- live filter for tables and lists: <input data-filter="#tableid"> ----
 document.addEventListener("input", function (e) {
   var sel = e.target.getAttribute && e.target.getAttribute("data-filter");
   if (!sel) return;
   var q = e.target.value.trim().toLowerCase();
-  document.querySelectorAll(sel + " tbody tr").forEach(function (tr) {
+  document.querySelectorAll(sel + " tbody tr, " + sel + " > li").forEach(function (tr) {
     tr.style.display = tr.textContent.toLowerCase().indexOf(q) === -1 ? "none" : "";
   });
 });

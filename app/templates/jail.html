@@ -12,10 +12,9 @@
 {% if error %}
 {% if st.starting is none %}<div class="flash error">{{ error }}</div>{% else %}{{ starting_card(st) }}{% endif %}
 {% else %}
-<div class="stats">
+<div class="stats s3">
   <div class="stat"><span>Banned now</span><b>{{ status.banned_now }}</b></div>
   <div class="stat"><span>Total banned</span><b>{{ status.banned_total }}</b></div>
-  <div class="stat"><span>Failing now</span><b>{{ status.failed_now }}</b></div>
   <div class="stat"><span>Total failures</span><b>{{ status.failed_total }}</b></div>
 </div>
 
@@ -26,7 +25,18 @@
       <dt>Ban after</dt><dd>{{ settings.maxretry }} failures within {{ settings.findtime|duration }}</dd>
       <dt>Ban time</dt><dd>{{ settings.bantime|duration }}{% if settings['bantime.increment'] in (true, 'true', 'True') %} <span class="tag">increments</span>{% endif %}</dd>
       <dt>Actions</dt><dd>{% for a in settings.actions or [] %}<span class="tag mut">{{ a }}</span>{% else %}<span class="muted">none</span>{% endfor %}</dd>
-      <dt>Logs</dt><dd class="small">{% for p in status.files %}<div class="ip">{{ p }}</div>{% else %}<span class="muted">none found</span>{% endfor %}</dd>
+      <dt>Logs</dt><dd class="small">
+        {%- set files = status.files or [] %}
+        {%- if not files %}<span class="muted">none found</span>
+        {%- elif files|length <= 3 %}{% for p in files %}<div class="ip">{{ p }}</div>{% endfor %}
+        {%- else %}{% set dir, names = files|log_files %}
+        {#- a long list stays folded, and even open it scrolls inside a short box -#}
+        <details class="logs">
+          <summary><b>{{ files|length }} files</b>{% if dir %} in <span class="ip">{{ dir }}</span>{% endif %}</summary>
+          {% if files|length > 10 %}<input type="search" class="logs-filter" placeholder="Filter {{ files|length }} files" data-filter="#log-list" aria-label="Filter log files">{% endif %}
+          <ul id="log-list">{% for n in names %}<li class="ip">{{ n }}</li>{% endfor %}</ul>
+        </details>
+        {%- endif %}</dd>
       {%- set self_ignored = settings.ignoreself in (true, 'true', 'True', 1, '1') %}
       <dt>Never ban</dt><dd class="small">
         {%- if settings.ignoreip %}{% for i in settings.ignoreip %}<span class="ip">{{ i }}</span>{{ ', ' if not loop.last }}{% endfor %}

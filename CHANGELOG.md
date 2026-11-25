@@ -8,6 +8,9 @@ entries are headed by build date rather than by version.
 ### Changed
 - Phones: the six tabs fit across the screen as icons with a short name (Home, Bans, Config, Activity,
   Backups, Security) instead of a row that scrolled sideways and hid the current tab.
+- A jail watching more than 3 logs shows one line, "25 files in /log/", that opens into a short scrolling
+  list (in number order, with a filter box when there are more than 10) instead of every path on the page.
+- The jail page drops the "Failing now" tile.
 
 ### Fixed
 - Phones: page buttons sit in a row under the page title; ban, unban and lookup fields take the full width

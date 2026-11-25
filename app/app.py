@@ -814,6 +814,26 @@ app.jinja_env.filters["short"] = fmt_short
 app.jinja_env.filters["duration"] = fmt_duration
 
 
+def log_files(files):
+    """A jail's log paths as (shared folder, names under it), so a long list can say "34 files in /log/npm/"
+    once instead of repeating the folder on every line. The folder is "" when the paths share none."""
+    # natural order: proxy-host-2 before proxy-host-10
+    files = sorted((str(f) for f in files or []),
+                   key=lambda f: [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", f)])
+    if not files:
+        return "", []
+    try:
+        common = os.path.commonpath([os.path.dirname(f) for f in files])
+    except ValueError:  # mixed absolute and relative paths
+        common = ""
+    if common in ("", "/"):
+        return "", files
+    return common.rstrip("/") + "/", [f[len(common):].lstrip("/") for f in files]
+
+
+app.jinja_env.filters["log_files"] = log_files
+
+
 # ---------- auth ----------
 def load_passkeys():
     try:

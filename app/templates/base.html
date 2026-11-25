@@ -354,6 +354,10 @@
   .tester pre { max-height:50vh; overflow:auto; white-space:pre }
   .kv { display:grid; grid-template-columns:max-content 1fr; gap:.35rem 1.2rem; margin:0 }
   .kv dt { color:var(--mut); font-size:.85rem } .kv dd { margin:0; overflow-wrap:anywhere }
+  details.logs > summary { cursor:pointer }
+  details.logs .logs-filter { margin:.45rem 0 .2rem; padding:.35rem .6rem; font-size:.85rem }
+  details.logs ul { list-style:none; margin:.35rem 0 0; padding:.3rem .5rem; max-height:11rem; overflow:auto; border:1px solid var(--bd); border-radius:8px; background:var(--bg) }
+  details.logs li { padding:.12rem 0; overflow-wrap:anywhere }
   .matches { margin:.3rem 0 0; font-size:.8rem; color:var(--mut); max-height:8rem; overflow:auto; white-space:pre-wrap }
   .filelist td:first-child a { font-weight:600; text-decoration:none }
   td[data-label="Jail"], td[data-label="IP"], .filelist td:first-child { white-space:nowrap }
