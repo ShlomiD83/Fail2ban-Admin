@@ -18,17 +18,20 @@
 </div>
 {% endif %}
 
+<section class="card flush quickban" aria-label="Ban or unban addresses">
+  <form method="post" action="{{ url_for('ban') }}" class="banbar" data-confirm="Apply this to the addresses you entered? Bans and unbans run the jail's actions.">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ url_for('dashboard') }}">
+    <input type="text" name="ips" class="mono" placeholder="Ban or unban: 198.51.100.7, 203.0.113.0/24" aria-label="IP addresses or networks" required spellcheck="false" autocomplete="off">
+    <select name="jail" aria-label="Jail">{% for j in st.jails %}<option>{{ j }}</option>{% endfor %}<option value="*">all jails (unban only)</option></select>
+    <button class="btn bad">{{ ic('ban') }}Ban</button>
+    <button class="btn sec" formaction="{{ url_for('unban') }}">{{ ic('unlock') }}Unban</button>
+  </form>
+</section>
+
 <div class="dlayout" id="dash-cards">
   <div class="dcol">
     <section class="card flush" data-card="1" data-pin="left">
       <h2 class="ch">{{ ic('ban') }}Banned now <span class="pill{{ ' bad' if banned }}">{{ banned|length }}</span><a class="r" href="{{ url_for('jails') }}">All jails →</a></h2>
-      <form method="post" action="{{ url_for('ban') }}" class="banbar" data-confirm="Apply this to the addresses you entered? Bans and unbans run the jail's actions.">
-        <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ url_for('dashboard') }}">
-        <input type="text" name="ips" class="mono" placeholder="Ban or unban: 198.51.100.7, 203.0.113.0/24" aria-label="IP addresses or networks" required spellcheck="false" autocomplete="off">
-        <select name="jail" aria-label="Jail">{% for j in st.jails %}<option>{{ j }}</option>{% endfor %}<option value="*">all jails (unban only)</option></select>
-        <button class="btn bad">{{ ic('ban') }}Ban</button>
-        <button class="btn sec" formaction="{{ url_for('unban') }}">{{ ic('unlock') }}Unban</button>
-      </form>
       {% if banned_error %}<div class="flash error" style="margin:.8rem 1.1rem">{{ banned_error }}</div>{% endif %}
       {% if banned %}
       <div class="tscroll">
