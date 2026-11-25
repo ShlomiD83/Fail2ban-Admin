@@ -6,8 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>{% block title %}Fail2ban Admin{% endblock %}</title>
-<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='f2b-icon.svg', v=2) }}">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='f2b-icon.svg', v=3) }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png', v=3) }}">
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {%- set f2b_starting = st is defined and st.starting is not none %}
 {%- set restart_watch = request.args.get('restarting') %}
@@ -409,7 +409,7 @@
 {% if session.auth %}
 <header class="top">
   <div class="topin">
-    <a class="brand" href="{{ url_for('dashboard') }}" title="Dashboard"><img src="{{ url_for('static', filename='f2b-icon.svg', v=2) }}" alt="" width="30" height="30"><span>Fail2ban Admin</span></a>
+    <a class="brand" href="{{ url_for('dashboard') }}" title="Dashboard"><img src="{{ url_for('static', filename='f2b-icon.svg', v=3) }}" alt="" width="30" height="30"><span>Fail2ban Admin</span></a>
     <nav class="tabs" aria-label="Sections">
       <a href="{{ url_for('dashboard') }}" class="{{ 'on' if page=='dashboard' }}" title="Dashboard" data-s="Home">{{ ic('home') }}<span class="tl">Dashboard</span></a>
       <a href="{{ url_for('jails') }}" class="{{ 'on' if page=='jails' }}" title="Jails and Bans" data-s="Bans">{{ ic('jail') }}<span class="tl">Jails &amp; Bans</span></a>

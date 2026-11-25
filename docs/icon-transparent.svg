@@ -1,18 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 15 96 96" role="img" aria-labelledby="t">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="22 26 84 84" role="img" aria-labelledby="t">
   <title id="t">Fail2ban Admin</title>
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#5eead4"/>
-      <stop offset="1" stop-color="#0f766e"/>
-    </linearGradient>
-    <!-- the bars are cut out of the shield, so they're transparent too -->
-    <mask id="bars" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
-      <rect x="0" y="0" width="128" height="128" fill="#fff"/>
-      <g stroke="#000" stroke-width="7" stroke-linecap="round">
-        <path d="M50 42v44M64 38v52M78 42v44"/>
-      </g>
-      <path d="M41 56h46" stroke="#000" stroke-width="6" stroke-linecap="round"/>
-    </mask>
-  </defs>
-  <path d="M64 18 30 31v29c0 23 14 39 34 48 20-9 34-25 34-48V31Z" fill="url(#g)" mask="url(#bars)"/>
+  <!-- the BAN stamp alone, on a transparent background -->
+  <g transform="rotate(-14 64 68)" fill="none" stroke="#dc2626" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="68" r="36" stroke-width="7"/>
+    <circle cx="64" cy="68" r="27" stroke-width="2.5"/>
+    <path stroke-width="4.5" d="M44 60V76h6.5a4 4 0 0 0 0-8H44m0 0h5.5a4 4 0 0 0 0-8H44M58 76l5.5-16 5.5 16m-9.1-5.5h7.2M73 76V60l11 16V60"/>
+  </g>
 </svg>

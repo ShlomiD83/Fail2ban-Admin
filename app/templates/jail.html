@@ -39,7 +39,14 @@
         {%- endif %}</dd>
       {%- set self_ignored = settings.ignoreself in (true, 'true', 'True', 1, '1') %}
       <dt>Never ban</dt><dd class="small">
-        {%- if settings.ignoreip %}{% for i in settings.ignoreip %}<span class="ip">{{ i }}</span>{{ ', ' if not loop.last }}{% endfor %}
+        {%- set ign = settings.ignoreip or [] %}
+        {%- if ign|length > 3 %}
+        <details class="logs">
+          <summary><b>{{ ign|length }} addresses</b>{% if self_ignored %}<span class="muted">+ this server's own (ignoreself)</span>{% endif %}</summary>
+          {% if ign|length > 10 %}<input type="search" class="logs-filter" placeholder="Filter {{ ign|length }} addresses" data-filter="#ignore-list" aria-label="Filter never-ban addresses">{% endif %}
+          <ul id="ignore-list">{% for i in ign %}<li class="ip">{{ i }}</li>{% endfor %}</ul>
+        </details>
+        {%- elif ign %}{% for i in ign %}<span class="ip">{{ i }}</span>{{ ', ' if not loop.last }}{% endfor %}
           {%- if self_ignored %}<span class="muted">, and this server's own addresses (ignoreself)</span>{% endif %}
         {%- elif self_ignored %}<span class="muted">Only this server's own addresses (ignoreself)</span>
         {%- else %}<span class="muted">Nobody (ignoreip is empty, ignoreself is off)</span>{% endif -%}
@@ -54,7 +61,7 @@
       <div class="row keep" style="margin-top:.6rem"><button class="btn bad">{{ ic('ban') }}Ban</button></div>
       <label class="chk" style="margin-top:.6rem" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>
       <label class="chk" style="margin-top:.3rem" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>
-      <p class="muted small" style="margin:.5rem 0 0">Runs every action of this jail ({{ (settings.actions or [])|join(', ') }}). Your address: <span class="ip">{{ your_ip }}</span></p>
+      <p class="muted small" style="margin:.5rem 0 0">Runs every action of this jail ({{ (settings.actions or [])|join(', ') }}).</p>
     </form>
   </div>
 </div>

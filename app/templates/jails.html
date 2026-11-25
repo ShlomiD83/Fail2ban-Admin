@@ -25,7 +25,7 @@
       </div>
       <label class="chk" style="margin-top:.6rem" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>
       <label class="chk" style="margin-top:.3rem" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>
-      <p class="muted small" style="margin:.5rem 0 0">Your address is <span class="ip">{{ your_ip }}</span>. Banning runs every action of the chosen jail (firewall, Cloudflare, mail, AbuseIPDB report…), exactly like <code>fail2ban-client set &lt;jail&gt; banip</code>, and lasts the jail's bantime.</p>
+      <p class="muted small" style="margin:.5rem 0 0">Banning runs every action of the chosen jail (firewall, Cloudflare, mail, AbuseIPDB report…), exactly like <code>fail2ban-client set &lt;jail&gt; banip</code>, and lasts the jail's bantime.</p>
     </form>
   </div>
   <div class="card" style="margin:0">

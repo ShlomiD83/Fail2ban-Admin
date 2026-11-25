@@ -3,6 +3,15 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- New icon and banner: a red BAN stamp on a log page, replacing the shield (favicon, sign-in page, top bar,
+  apple-touch icon, README logos, social preview, transparent icon).
+- A jail's "Never ban" list folds like the log list: more than 3 entries show as "11 addresses", opening
+  into a short scrolling list with a filter box when there are more than 10.
+- The ban forms no longer show "Your address": behind the Docker network it showed the gateway, not you.
+
 ## 2026.11.25-0525
 
 ### Changed
