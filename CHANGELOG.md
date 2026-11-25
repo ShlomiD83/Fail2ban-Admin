@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.25-0658
 
 ### Fixed
 - Dashboard, Banned now: the country and AbuseIPDB score sit beside the IP instead of under it, the Why column
