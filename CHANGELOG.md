@@ -3,6 +3,12 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Fixed
+- The user menu's "Admin log" item, now called "Admin actions", opens the Activity page at the top of the admin
+  actions card instead of partway down the list, with the heading and filter box in view below the top bar.
+
 ## 2026.11.25-0608
 
 ### Changed
