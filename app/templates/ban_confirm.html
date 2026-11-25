@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_icons.html" import ic %}
+{# Shown instead of banning when a manual ban would hit your own address or a jail's never-ban list.
+   Nothing has been banned yet; "Ban anyway" sends the same request again, confirmed. #}
+{% block body %}
+<div class="pagehead"><h1>Ban anyway?</h1></div>
+<div class="card accent" style="max-width:720px">
+  <p style="margin-top:0"><b>Nothing has been banned yet.</b> {{ 'This ban needs' if (mine and hits) or ips|length == 1 else 'These bans need' }} a second look:</p>
+  <ul style="margin:.4rem 0 1rem;padding-left:1.2rem">
+    {% if mine %}<li style="margin-bottom:.4rem"><span class="ip">{{ mine|join(', ') }}</span> {{ 'includes' if mine|length == 1 else 'include' }} <b>your own address</b> (or this server's public IP). Banning it can lock you out of this panel and your other services.</li>{% endif %}
+    {% if hits %}<li><span class="ip">{{ hits|join('; ') }}</span> {{ 'is' if hits|length == 1 else 'are' }} on jail <b>{{ jail }}</b>'s <b>never-ban list</b> (ignoreip). Fail2ban only applies that list to automatic bans, so a manual ban would go through.</li>{% endif %}
+  </ul>
+  <p class="muted small" style="margin:0 0 .8rem">Jail: <b>{{ jail }}</b> · {{ ips|length }} address{{ 'es' if ips|length != 1 }}: <span class="ip">{{ ips[:10]|join(', ') }}{% if ips|length > 10 %} and {{ ips|length - 10 }} more{% endif %}</span></p>
+  <form method="post" action="{{ url_for('ban') }}" class="row keep" style="margin:0">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ back }}">
+    <input type="hidden" name="jail" value="{{ jail }}"><input type="hidden" name="ips" value="{{ ips|join(' ') }}">
+    {% if mine or confirmed_self %}<input type="hidden" name="confirm_self" value="on">{% endif %}
+    {% if hits or confirmed_ignored %}<input type="hidden" name="confirm_ignored" value="on">{% endif %}
+    <button class="btn bad">{{ ic('ban') }}Ban anyway</button>
+    <a class="btn sec" href="{{ back }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1666,19 +1666,18 @@ def ban():
             return redirect(back)
         # don't lock yourself out by accident
         mine = [ip for ip in ips if ip_in(client_ip(), [ip]) or (_public_ip["ip"] and ip_in(_public_ip["ip"], [ip]))]
-        if mine and request.form.get("confirm_self") != "on":
-            flash("Not banned: " + ", ".join(mine) + " includes your own address (or this server's public IP). "
-                  "Tick 'Ban even if it's my own address' to do it anyway.", "error")
-            return redirect(back)
         # Fail2ban's banip doesn't check ignoreip (that only stops automatic bans), so check it here:
         # an address or network that touches an ignoreip entry is only banned when confirmed.
         ignored = f2b.one("get", jail_name, "ignoreip") or []
         hits = [f"{ip} (ignoreip {ignore_overlap(ip, ignored)})" for ip in ips if ignore_overlap(ip, ignored)]
-        if hits and request.form.get("confirm_ignored") != "on":
-            flash(f"Not banned: {'; '.join(hits[:10])} {'is' if len(hits) == 1 else 'are'} on jail {jail_name}'s "
-                  "never-ban list. A manual ban would ban it anyway (Fail2ban only applies ignoreip to automatic "
-                  "bans). Tick 'Ban even if it's on the jail's ignore list' to do it anyway.", "error")
-            return redirect(back)
+        ask_self = bool(mine) and request.form.get("confirm_self") != "on"
+        ask_ignored = bool(hits) and request.form.get("confirm_ignored") != "on"
+        if ask_self or ask_ignored:
+            # nothing is banned yet: show why, with "Ban anyway" (the same request, confirmed) and "Cancel"
+            return render_template("ban_confirm.html", page="jails", ips=ips, jail=jail_name, back=back,
+                                   mine=mine if ask_self else [], hits=hits if ask_ignored else [],
+                                   confirmed_self=not ask_self and bool(mine),
+                                   confirmed_ignored=not ask_ignored and bool(hits))
         n = f2b.ban(jail_name, ips)
     except F2BError as e:
         flash(f"Ban failed: {e}", "error")

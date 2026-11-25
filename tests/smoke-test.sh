@@ -194,6 +194,7 @@ check "ban: an unknown jail is refused" body_has "no running jail"
 banned() { docker exec "$F2B" fail2ban-client get smoke banip 2>/dev/null | grep -q -- "$1"; }
 post /ban -d csrf="$T" -d jail=smoke --data-urlencode "ips=192.0.2.10"
 check "ban: an address in ignoreip is refused" body_has "never-ban list"
+check "ban: ...with a Ban anyway confirmation" body_has "Ban anyway"
 check "ban: ...and Fail2ban didn't ban it" bash -c "! docker exec $F2B fail2ban-client get smoke banip | grep -q 192.0.2.10"
 post /ban -d csrf="$T" -d jail=smoke --data-urlencode "ips=192.0.0.0/16"
 check "ban: a network overlapping ignoreip is refused" body_has "never-ban list"

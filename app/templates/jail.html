@@ -59,8 +59,6 @@
       <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="jail" value="{{ name }}"><input type="hidden" name="back" value="{{ here() }}">
       <textarea name="ips" class="short" style="min-height:4.5rem" placeholder="203.0.113.7" required spellcheck="false" aria-label="IP addresses to ban"></textarea>
       <div class="row keep" style="margin-top:.6rem"><button class="btn bad">{{ ic('ban') }}Ban</button></div>
-      <label class="chk" style="margin-top:.6rem" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>
-      <label class="chk" style="margin-top:.3rem" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>
       <p class="muted small" style="margin:.5rem 0 0">Runs every action of this jail ({{ (settings.actions or [])|join(', ') }}).</p>
     </form>
   </div>

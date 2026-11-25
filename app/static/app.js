@@ -112,8 +112,21 @@ document.addEventListener("input", function (e) {
     m.textContent = text || "";
     m.className = "msg" + (isErr ? " err" : "");
   }
-  function fail(e) {
-    if (e && (e.name === "NotAllowedError" || e.name === "AbortError")) say("Cancelled or timed out.", true);
+  // Only one passkey request can run at a time. A password manager extension that is locked (Bitwarden,
+  // 1Password...) can leave its prompt pending forever, and then every later attempt fails until the page is
+  // reloaded. So each attempt cancels the one before it, and a cancelled attempt stays quiet.
+  var pending = null;
+  function start() {
+    if (pending) { try { pending.abort(); } catch (e) {} }
+    pending = window.AbortController ? new AbortController() : null;
+    return pending;
+  }
+  function current(ac) { return !ac || ac === pending; }
+  function fail(e, ac) {
+    if (!current(ac)) return;   // replaced by a newer attempt
+    pending = null;
+    if (e && (e.name === "NotAllowedError" || e.name === "AbortError"))
+      say("Cancelled or timed out. If your password manager was locked, unlock it and try again.", true);
     else if (e && e.name === "InvalidStateError") say("This device already has a passkey for this site.", true);
     else say((e && e.message) || "Something went wrong.", true);
   }
@@ -126,12 +139,13 @@ document.addEventListener("input", function (e) {
   function register() {
     if (!supported()) return;
     var nameEl = document.getElementById("pk-name");
+    var ac = start();
     say("Follow the prompt on your device…");
     post("/passkeys/register/options").then(function (o) {
       o.challenge = toBuf(o.challenge);
       o.user.id = toBuf(o.user.id);
       (o.excludeCredentials || []).forEach(function (c) { c.id = toBuf(c.id); });
-      return navigator.credentials.create({ publicKey: o });
+      return navigator.credentials.create(ac ? { publicKey: o, signal: ac.signal } : { publicKey: o });
     }).then(function (c) {
       var r = c.response;
       return post("/passkeys/register/verify", {
@@ -146,16 +160,17 @@ document.addEventListener("input", function (e) {
           }
         }
       });
-    }).then(function () { location.reload(); }).catch(fail);
+    }).then(function () { location.reload(); }).catch(function (e) { fail(e, ac); });
   }
 
   function login() {
     if (!supported()) return;
+    var ac = start();
     say("Follow the prompt on your device…");
     post("/passkeys/login/options").then(function (o) {
       o.challenge = toBuf(o.challenge);
       (o.allowCredentials || []).forEach(function (c) { c.id = toBuf(c.id); });
-      return navigator.credentials.get({ publicKey: o });
+      return navigator.credentials.get(ac ? { publicKey: o, signal: ac.signal } : { publicKey: o });
     }).then(function (c) {
       var r = c.response;
       return post("/passkeys/login/verify", {
@@ -170,7 +185,7 @@ document.addEventListener("input", function (e) {
           }
         }
       });
-    }).then(function (j) { location.href = j.next || "/"; }).catch(fail);
+    }).then(function (j) { location.href = j.next || "/"; }).catch(function (e) { fail(e, ac); });
   }
 
   document.addEventListener("click", function (e) {

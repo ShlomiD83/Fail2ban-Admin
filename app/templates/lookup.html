@@ -37,8 +37,6 @@
     <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="ips" value="{{ r.ip }}"><input type="hidden" name="back" value="{{ request.full_path }}">
     <select name="jail" aria-label="Jail">{% for j in r.all_jails %}<option>{{ j }}</option>{% endfor %}</select>
     <button class="btn bad">{{ ic('ban') }}Ban</button>
-    {% if r.ip == your_ip %}<label class="chk" title="The panel normally refuses to ban the address you are using, or this server's public IP, so you can't lock yourself out by accident."><input type="checkbox" name="confirm_self"> Ban even if it's my own address</label>{% endif %}
-    {% if r.ignored %}<label class="chk" title="ignoreip lists addresses a jail must never ban (your LAN, your own IPs). Fail2ban applies it only to automatic bans, so the panel asks before a manual ban of such an address."><input type="checkbox" name="confirm_ignored"> Ban even if it's on the jail's ignore list (ignoreip)</label>{% endif %}
   </form>
   {% endif %}
   {% endif %}

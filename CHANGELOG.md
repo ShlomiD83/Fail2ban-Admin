@@ -3,6 +3,18 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- The "Ban even if it's my own address" and "Ban even if it's on the jail's ignore list" checkboxes are gone.
+  A ban that hits one of those cases now opens a short "Ban anyway?" page explaining why, with Ban anyway
+  and Cancel; other bans go through as before.
+
+### Fixed
+- Passkey sign-in works again after a failed attempt without reloading the page. A locked password
+  manager (for example Bitwarden) could leave the first request hanging, which blocked every retry; each
+  attempt now cancels the one before it, and the message suggests unlocking the password manager.
+
 ## 2026.11.25-1038
 
 ### Added
