@@ -3,6 +3,12 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Added
+- Phones: a search button next to Reload and Restart opens the IP lookup field under the top bar, for the
+  country, AbuseIPDB score and reports of any IP (desktop already has the field in the bar).
+
 ## 2026.11.25-0705
 
 ### Changed

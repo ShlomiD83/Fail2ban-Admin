@@ -406,6 +406,24 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("f2b:refresh", refresh);
 });
 
+// ---- phones: the search button in the top bar shows or hides the IP lookup box ----
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("#msearch");
+  if (!b) return;
+  var bar = b.closest(".topin"), open = !bar.classList.contains("searching");
+  bar.classList.toggle("searching", open);
+  b.setAttribute("aria-expanded", open ? "true" : "false");
+  // the "( / )" keyboard hint means nothing on a phone
+  if (open) { var s = document.getElementById("top-lookup"); if (s) { s.placeholder = "Look up an IP"; s.focus(); } }
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+  var bar = document.querySelector(".topin.searching");
+  if (!bar) return;
+  bar.classList.remove("searching");
+  var b = document.getElementById("msearch"); if (b) { b.setAttribute("aria-expanded", "false"); b.focus(); }
+});
+
 // ---- "/" jumps to the IP lookup in the top bar; Escape closes the user menu ----
 document.addEventListener("keydown", function (e) {
   var t = e.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));

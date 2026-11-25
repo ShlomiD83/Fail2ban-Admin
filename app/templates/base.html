@@ -50,6 +50,7 @@
   .tsearch { position:relative; flex:0 1 220px; min-width:120px }
   .tsearch input[type=search] { width:100%; padding:.42rem .6rem .42rem 2rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:rgba(0,0,0,.22); color:#f4f4f5; font:inherit; font-size:.88rem }
   .tsearch input::placeholder { color:#71717a }
+  .tbtn.msearch { display:none }  /* phones only: desktop has the search box in the bar */
   .tsearch .ic { position:absolute; left:.6rem; top:50%; transform:translateY(-50%); color:#71717a }
   .tbtn { display:inline-flex; align-items:center; gap:.4rem; padding:.42rem .65rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:transparent; color:#e4e4e7; font:inherit; font-size:.86rem; cursor:pointer; white-space:nowrap }
   .tbtn:hover { background:var(--side-on); color:#fff }
@@ -386,6 +387,9 @@
     .row.keep > input.grow ~ .btn { flex:1 0 auto }
     .hfilters select { flex:1 1 auto }
     .tsearch { display:none }
+    .tbtn.msearch { display:inline-flex }
+    .msearch[aria-expanded="true"] { background:var(--side-on); color:#fff }
+    .topin.searching .tsearch { display:block; order:4; flex:1 1 100%; min-width:0 }
     .tbtn .lbl { display:none }
     .stripin { padding:.4rem .75rem; gap:.2rem .9rem }
     .stripin .hide-sm { display:none }
@@ -424,6 +428,7 @@
     </nav>
     <div class="spacer"></div>
     <form method="get" action="{{ url_for('lookup') }}" class="tsearch" role="search">{{ ic('search') }}<input type="search" name="ip" id="top-lookup" placeholder="Look up an IP  ( / )" aria-label="Look up an IP"></form>
+    <button type="button" class="tbtn msearch" id="msearch" title="Look up an IP (country, AbuseIPDB score and reports)" aria-label="Look up an IP" aria-expanded="false" aria-controls="top-lookup">{{ ic('search') }}</button>
     <form method="post" action="{{ url_for('reload') }}" data-confirm="Reload all Fail2ban jails? Bans are kept.">
       <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ here() }}">
       <button class="tbtn" title="Reload Fail2ban (all jails, bans are kept)">{{ ic('reload') }}<span class="lbl">Reload</span></button>
