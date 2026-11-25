@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.25-1420
 
 ### Changed
 - The "Ban even if it's my own address" and "Ban even if it's on the jail's ignore list" checkboxes are gone.
