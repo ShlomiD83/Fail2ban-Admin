@@ -16,6 +16,8 @@ entries are headed by build date rather than by version.
 - Phones: page buttons sit in a row under the page title; ban, unban and lookup fields take the full width
   with their buttons sharing the row below (the lookup and new-file name fields were squeezed to a sliver).
 - A jail's ban form lists both "Ban even if…" checkboxes under the Ban button.
+- Dark mode: buttons that are links ("Open in editor" on a backup, "AbuseIPDB ↗", "Edit jail.d/…") had
+  link-coloured text; "Open in editor" was barely readable on its teal background.
 
 ## 2026.11.24-2154
 
