@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.25-0622
 
 ### Added
 - The sign-in pages have a Theme switch (Auto, Light, Dark) under the sign-in card, in place of the small
