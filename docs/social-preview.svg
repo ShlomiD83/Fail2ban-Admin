@@ -1,28 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
   <defs>
     <radialGradient id="glow" cx="0.78" cy="0.42" r="0.6">
-      <stop offset="0" stop-color="#2dd4bf" stop-opacity=".38"/>
-      <stop offset=".55" stop-color="#0f766e" stop-opacity=".08"/>
-      <stop offset="1" stop-color="#0b1517" stop-opacity="0"/>
+      <stop offset="0" stop-color="#e11d48" stop-opacity=".30"/>
+      <stop offset=".55" stop-color="#9f1239" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#0f0f11" stop-opacity="0"/>
     </radialGradient>
     <pattern id="bars" width="44" height="640" patternUnits="userSpaceOnUse">
       <rect x="0" y="0" width="6" height="640" fill="#ffffff" opacity=".028"/>
     </pattern>
   </defs>
-  <rect width="1280" height="640" fill="#0b1517"/>
+  <rect width="1280" height="640" fill="#0f0f11"/>
   <rect width="1280" height="640" fill="url(#bars)"/>
   <rect width="1280" height="640" fill="url(#glow)"/>
 
   <!-- the BAN stamp icon, large, on the right -->
   <svg x="840" y="120" width="360" height="360" viewBox="0 0 128 128">
-    <rect x="4" y="4" width="120" height="120" rx="28" fill="#f0fdfa"/>
-      <g fill="#9fd8cf">
+    <rect x="4" y="4" width="120" height="120" rx="28" fill="#fafafa"/>
+      <g fill="#d4d4d8">
         <rect x="20" y="22" width="64" height="7" rx="3.5"/>
         <rect x="20" y="36" width="86" height="7" rx="3.5"/>
         <rect x="20" y="100" width="54" height="7" rx="3.5"/>
       </g>
       <g transform="rotate(-14 64 68)" fill="none" stroke="#dc2626" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="64" cy="68" r="36" fill="#f0fdfa" stroke-width="7"/>
+        <circle cx="64" cy="68" r="36" fill="#fafafa" stroke-width="7"/>
         <circle cx="64" cy="68" r="27" stroke-width="2.5"/>
         <path stroke-width="4.5" d="M44 60V76h6.5a4 4 0 0 0 0-8H44m0 0h5.5a4 4 0 0 0 0-8H44M58 76l5.5-16 5.5 16m-9.1-5.5h7.2M73 76V60l11 16V60"/>
       </g>
@@ -30,20 +30,20 @@
 
   <!-- text -->
   <g font-family="Inter, 'Segoe UI', 'DejaVu Sans', sans-serif">
-    <text x="88" y="200" fill="#5eead4" font-size="26" font-weight="700" letter-spacing="5">SELF-HOSTED · DOCKER</text>
-    <text x="84" y="290" fill="#ecf6f4" font-size="96" font-weight="800" letter-spacing="-2">Fail2ban Admin</text>
-    <text x="88" y="350" fill="#a9c2bf" font-size="31" font-weight="500">A web panel for Fail2ban: jails, filters, actions,</text>
-    <text x="88" y="392" fill="#a9c2bf" font-size="31" font-weight="500">bans and unbans, from your browser.</text>
+    <text x="88" y="200" fill="#fb7185" font-size="26" font-weight="700" letter-spacing="5">SELF-HOSTED · DOCKER</text>
+    <text x="84" y="290" fill="#f4f4f5" font-size="96" font-weight="800" letter-spacing="-2">Fail2ban Admin</text>
+    <text x="88" y="350" fill="#a1a1aa" font-size="31" font-weight="500">A web panel for Fail2ban: jails, filters, actions,</text>
+    <text x="88" y="392" fill="#a1a1aa" font-size="31" font-weight="500">bans and unbans, from your browser.</text>
     <g font-size="22" font-weight="600">
-      <rect x="88" y="440" width="196" height="48" rx="10" fill="#10282a" stroke="#1f5a55"/>
-      <text x="186" y="471" fill="#7eead9" text-anchor="middle">Validated editor</text>
-      <rect x="300" y="440" width="172" height="48" rx="10" fill="#10282a" stroke="#1f5a55"/>
-      <text x="386" y="471" fill="#7eead9" text-anchor="middle">Ban / unban</text>
-      <rect x="488" y="440" width="142" height="48" rx="10" fill="#10282a" stroke="#1f5a55"/>
-      <text x="559" y="471" fill="#7eead9" text-anchor="middle">Backups</text>
-      <rect x="646" y="440" width="150" height="48" rx="10" fill="#10282a" stroke="#1f5a55"/>
-      <text x="721" y="471" fill="#7eead9" text-anchor="middle">Passkeys</text>
+      <rect x="88" y="440" width="196" height="48" rx="10" fill="#1c1c1f" stroke="#3f3f46"/>
+      <text x="186" y="471" fill="#fda4af" text-anchor="middle">Validated editor</text>
+      <rect x="300" y="440" width="172" height="48" rx="10" fill="#1c1c1f" stroke="#3f3f46"/>
+      <text x="386" y="471" fill="#fda4af" text-anchor="middle">Ban / unban</text>
+      <rect x="488" y="440" width="142" height="48" rx="10" fill="#1c1c1f" stroke="#3f3f46"/>
+      <text x="559" y="471" fill="#fda4af" text-anchor="middle">Backups</text>
+      <rect x="646" y="440" width="150" height="48" rx="10" fill="#1c1c1f" stroke="#3f3f46"/>
+      <text x="721" y="471" fill="#fda4af" text-anchor="middle">Passkeys</text>
     </g>
-    <text x="88" y="560" fill="#5f7b78" font-size="22" font-weight="500">TOTP · reload &amp; restart · filter tester · ban history · amd64 + arm64</text>
+    <text x="88" y="560" fill="#71717a" font-size="22" font-weight="500">TOTP · reload &amp; restart · filter tester · ban history · amd64 + arm64</text>
   </g>
 </svg>

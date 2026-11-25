@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="440" height="96" viewBox="0 0 440 96" role="img" aria-label="Fail2ban Admin">
   <svg x="4" y="4" width="88" height="88" viewBox="0 0 128 128">
-  <rect x="4" y="4" width="120" height="120" rx="28" fill="#f0fdfa"/>
-  <g fill="#9fd8cf">
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#fafafa"/>
+  <g fill="#d4d4d8">
     <rect x="20" y="22" width="64" height="7" rx="3.5"/>
     <rect x="20" y="36" width="86" height="7" rx="3.5"/>
     <rect x="20" y="100" width="54" height="7" rx="3.5"/>
   </g>
   <g transform="rotate(-14 64 68)" fill="none" stroke="#dc2626" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="64" cy="68" r="36" fill="#f0fdfa" stroke-width="7"/>
+    <circle cx="64" cy="68" r="36" fill="#fafafa" stroke-width="7"/>
     <circle cx="64" cy="68" r="27" stroke-width="2.5"/>
     <path stroke-width="4.5" d="M44 60V76h6.5a4 4 0 0 0 0-8H44m0 0h5.5a4 4 0 0 0 0-8H44M58 76l5.5-16 5.5 16m-9.1-5.5h7.2M73 76V60l11 16V60"/>
   </g>
   </svg>
-  <text x="108" y="60" font-family="Inter,'Segoe UI',sans-serif" font-size="38" font-weight="800" fill="#ecf6f4" letter-spacing="-.5">Fail2ban <tspan fill="#5eead4">Admin</tspan></text>
+  <text x="108" y="60" font-family="Inter,'Segoe UI',sans-serif" font-size="38" font-weight="800" fill="#f4f4f5" letter-spacing="-.5">Fail2ban <tspan fill="#fb7185">Admin</tspan></text>
 </svg>

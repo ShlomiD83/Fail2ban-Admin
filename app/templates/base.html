@@ -7,23 +7,23 @@
 <meta name="color-scheme" content="light dark">
 <title>{% block title %}Fail2ban Admin{% endblock %}</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='f2b-icon.svg', v=4) }}">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png', v=3) }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png', v=4) }}">
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {%- set f2b_starting = st is defined and st.starting is not none %}
 {%- set restart_watch = request.args.get('restarting') %}
 {% if f2b_starting and not restart_watch %}<meta http-equiv="refresh" content="4">{% endif %}
 {% block head %}{% endblock %}
 <style>
-  /* "Harbor" theme: cool grey-green background, deep blue-green sidebar, teal accent */
-  :root { color-scheme: light; --bg:#f3f7f7; --card:#ffffff; --fg:#12302f; --mut:#5d7472; --pri:#0d9488; --on-pri:#ffffff; --pri-soft:#d6f1ec; --pri-fg:#0b6b62; --bad:#dc2626; --ok:#15803d; --warn:#c27803; --bd:#dbe6e5; --side:#0f2a2e; --side-fg:#9fbcba; --side-on:#173a3f; --glow:#5eead4; --shadow:0 1px 0 rgba(15,42,46,.05), 0 2px 8px rgba(15,42,46,.04); }
+  /* "Charcoal and crimson" theme: neutral greys, near-black top bar, one crimson accent (matches the BAN stamp) */
+  :root { color-scheme: light; --bg:#f4f4f5; --card:#ffffff; --fg:#18181b; --mut:#52525b; --pri:#be123c; --on-pri:#ffffff; --pri-soft:#ffe4e6; --pri-fg:#be123c; --bad:#dc2626; --ok:#15803d; --warn:#c27803; --bd:#e4e4e7; --side:#18181b; --side-fg:#a1a1aa; --side-on:#27272a; --glow:#fb7185; --shadow:0 1px 0 rgba(24,24,27,.05), 0 2px 8px rgba(24,24,27,.04); }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme: dark; --bg:#0d1517; --card:#142023; --fg:#e2efed; --mut:#8aa3a0; --pri:#2dd4bf; --on-pri:#052e2a; --pri-soft:#123430; --pri-fg:#7eead9; --bad:#f87171; --ok:#34d399; --warn:#fbbf24; --bd:#22333a; --side:#081113; --side-fg:#86a3a0; --side-on:#11262a; --shadow:none; }
+    :root:not([data-theme="light"]) { color-scheme: dark; --bg:#0f0f11; --card:#18181b; --fg:#f4f4f5; --mut:#a1a1aa; --pri:#e11d48; --on-pri:#ffffff; --pri-soft:#3f0d1b; --pri-fg:#fda4af; --bad:#f87171; --ok:#34d399; --warn:#fbbf24; --bd:#27272a; --side:#09090b; --side-fg:#a1a1aa; --side-on:#1f1f23; --shadow:none; }
   }
-  :root[data-theme="dark"] { color-scheme: dark; --bg:#0d1517; --card:#142023; --fg:#e2efed; --mut:#8aa3a0; --pri:#2dd4bf; --on-pri:#052e2a; --pri-soft:#123430; --pri-fg:#7eead9; --bad:#f87171; --ok:#34d399; --warn:#fbbf24; --bd:#22333a; --side:#081113; --side-fg:#86a3a0; --side-on:#11262a; --shadow:none; }
+  :root[data-theme="dark"] { color-scheme: dark; --bg:#0f0f11; --card:#18181b; --fg:#f4f4f5; --mut:#a1a1aa; --pri:#e11d48; --on-pri:#ffffff; --pri-soft:#3f0d1b; --pri-fg:#fda4af; --bad:#f87171; --ok:#34d399; --warn:#fbbf24; --bd:#27272a; --side:#09090b; --side-fg:#a1a1aa; --side-on:#1f1f23; --shadow:none; }
   /* editor syntax colours and indent guides */
-  :root { --hl-sec:#0b6b62; --hl-key:#1d4ed8; --hl-str:#15803d; --hl-num:#b45309; --hl-kw:#9333ea; --ig:#dde8e7; --ig-on:#8fd6cc }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hl-sec:#5eead4; --hl-key:#93c5fd; --hl-str:#86efac; --hl-num:#fcd34d; --hl-kw:#d8b4fe; --ig:#1c2a2e; --ig-on:#1f5f57 } }
-  :root[data-theme="dark"] { --hl-sec:#5eead4; --hl-key:#93c5fd; --hl-str:#86efac; --hl-num:#fcd34d; --hl-kw:#d8b4fe; --ig:#1c2a2e; --ig-on:#1f5f57 }
+  :root { --hl-sec:#be123c; --hl-key:#1d4ed8; --hl-str:#15803d; --hl-num:#b45309; --hl-kw:#9333ea; --ig:#e4e4e7; --ig-on:#fda4af }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hl-sec:#fb7185; --hl-key:#93c5fd; --hl-str:#86efac; --hl-num:#fcd34d; --hl-kw:#d8b4fe; --ig:#232327; --ig-on:#5b1a2b } }
+  :root[data-theme="dark"] { --hl-sec:#fb7185; --hl-key:#93c5fd; --hl-str:#86efac; --hl-num:#fcd34d; --hl-kw:#d8b4fe; --ig:#232327; --ig-on:#5b1a2b }
 
   * { box-sizing:border-box }
   [hidden] { display:none !important }
@@ -45,10 +45,10 @@
   .topin .spacer { flex:1 }
   .topin form { margin:0 }
   .tsearch { position:relative; flex:0 1 220px; min-width:120px }
-  .tsearch input[type=search] { width:100%; padding:.42rem .6rem .42rem 2rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:rgba(0,0,0,.22); color:#e2efed; font:inherit; font-size:.88rem }
-  .tsearch input::placeholder { color:#6f918e }
-  .tsearch .ic { position:absolute; left:.6rem; top:50%; transform:translateY(-50%); color:#6f918e }
-  .tbtn { display:inline-flex; align-items:center; gap:.4rem; padding:.42rem .65rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:transparent; color:#d6e6e4; font:inherit; font-size:.86rem; cursor:pointer; white-space:nowrap }
+  .tsearch input[type=search] { width:100%; padding:.42rem .6rem .42rem 2rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:rgba(0,0,0,.22); color:#f4f4f5; font:inherit; font-size:.88rem }
+  .tsearch input::placeholder { color:#71717a }
+  .tsearch .ic { position:absolute; left:.6rem; top:50%; transform:translateY(-50%); color:#71717a }
+  .tbtn { display:inline-flex; align-items:center; gap:.4rem; padding:.42rem .65rem; border-radius:8px; border:1px solid color-mix(in srgb, var(--glow) 18%, transparent); background:transparent; color:#e4e4e7; font:inherit; font-size:.86rem; cursor:pointer; white-space:nowrap }
   .tbtn:hover { background:var(--side-on); color:#fff }
   .usermenu { position:relative }
   .usermenu > summary { list-style:none; cursor:pointer }
@@ -60,11 +60,11 @@
   .menu .who b { display:block; color:var(--fg); font-size:.95rem }
   .menu a, .menu button { display:flex; align-items:center; gap:.55rem; width:100%; padding:.5rem .7rem; border-radius:7px; border:0; background:none; color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; text-align:left }
   .menu a:hover, .menu button:hover { background:var(--bg) }
-  .strip { background:color-mix(in srgb, var(--pri) 7%, var(--bg)); border-bottom:1px solid var(--bd) }
+  .strip { background:color-mix(in srgb, var(--fg) 5%, var(--bg)); border-bottom:1px solid var(--bd) }
   .stripin { max-width:1360px; margin:0 auto; padding:.42rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; gap:.3rem 1.3rem; font-size:.84rem; color:var(--mut); min-height:2.1rem }
   .stripin b { color:var(--fg); font-weight:600 }
   .stripin .grow { flex:1 }
-  .dot { width:9px; height:9px; border-radius:50%; background:#8aa3a0; flex:none; display:inline-block; margin-right:.4rem; vertical-align:0 }
+  .dot { width:9px; height:9px; border-radius:50%; background:#a1a1aa; flex:none; display:inline-block; margin-right:.4rem; vertical-align:0 }
   .dot.ok { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2) } .dot.bad { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.2) }
   .dot.warn { background:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.22) }
   main { max-width:1360px; margin:0 auto; padding:1.6rem 1.25rem 3rem }
@@ -111,7 +111,7 @@
   .btn:hover { filter:brightness(1.08) } .btn:active { transform:translateY(1px) }
   .btn[disabled] { opacity:.5; cursor:not-allowed }
   .btn.sec { background:var(--card); color:var(--fg); border-color:var(--bd) } .btn.sec:hover { background:var(--bg); filter:none; border-color:color-mix(in srgb, var(--pri) 40%, var(--bd)) }
-  .btn.bad { background:var(--bad); color:#fff }
+  .btn.bad { background:#dc2626; color:#fff }  /* the solid Ban button keeps the deep red in dark mode too (--bad is light there, for text) */
   .btn.ghost-bad { background:transparent; color:var(--bad); border-color:color-mix(in srgb, var(--bad) 40%, transparent) }
   .btn.ghost-bad:hover { background:color-mix(in srgb, var(--bad) 10%, transparent); filter:none }
   .btn.sm { padding:.28rem .7rem; font-size:.84rem; font-weight:600 }
