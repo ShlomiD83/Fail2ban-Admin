@@ -5,6 +5,17 @@ entries are headed by build date rather than by version.
 
 ## Unreleased
 
+### Changed
+- Phones: the six tabs fit across the screen as icons with a short name (Home, Bans, Config, Activity,
+  Backups, Security) instead of a row that scrolled sideways and hid the current tab.
+
+### Fixed
+- Phones: page buttons sit in a row under the page title; ban, unban and lookup fields take the full width
+  with their buttons sharing the row below (the lookup and new-file name fields were squeezed to a sliver).
+- A jail's ban form lists both "Ban even if…" checkboxes under the Ban button.
+
+## 2026.11.24-2154
+
 ### Fixed
 - The "Fail2ban is restarting" card counts the seconds live instead of staying at 0 s.
 
