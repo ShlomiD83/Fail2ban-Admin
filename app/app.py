@@ -1512,8 +1512,7 @@ def dashboard():
         for h in hist:
             per_ip[h["ip"]] = per_ip.get(h["ip"], 0) + 1
         top = sorted(per_ip.items(), key=lambda kv: kv[1], reverse=True)[:5]
-        most = top[0][1] if top else 1
-        offenders = [{"ip": ip, "n": n, "pct": round(n * 100 / most)} for ip, n in top]
+        offenders = [{"ip": ip, "n": n} for ip, n in top]
 
     # recent activity: Fail2ban's bans and what admins did here
     feed = [{"time": h["time"], "kind": "ban", "ip": h["ip"], "jail": h["jail"], "text": ban_reason(h)}

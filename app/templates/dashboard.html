@@ -105,7 +105,7 @@
     <section class="card flush" data-card="4">
       <h2 class="ch">{{ ic('flame') }}Top offenders<span class="r muted">30 days</span></h2>
       {% for o in offenders %}
-      <a class="orow" href="{{ url_for('lookup', ip=o.ip) }}"><span><span class="ip">{{ o.ip }}</span>{{ iptags(o.ip) }}</span><b>{{ o.n }}×</b><span class="obar"><i style="width:{{ o.pct }}%"></i></span></a>
+      <a class="orow" href="{{ url_for('lookup', ip=o.ip) }}"><span><span class="ip">{{ o.ip }}</span>{{ iptags(o.ip) }}</span><b>{{ o.n }}×</b></a>
       {% else %}
       <p class="empty">{{ 'No bans in the last 30 days.' if db_ok else 'Fail2ban\'s database isn\'t readable here.' }}</p>
       {% endfor %}
