@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.25-1432
 
 ### Changed
 - Dashboard: the ban/unban box is its own slim card directly above Banned now, the same width, instead of
