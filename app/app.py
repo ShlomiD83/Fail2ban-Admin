@@ -248,9 +248,7 @@ def idle_sign_out():
     seen = session.get("seen") or t
     if t - seen >= IDLE_TIMEOUT:
         audit("Signed out (inactivity)", "", f"no activity for {IDLE_TIMEOUT // 60} minutes")
-        session.clear()
-        flash(f"You were signed out after {IDLE_TIMEOUT // 60} minutes without activity. "
-              "Unsaved edits are kept in this browser and can be restored.", "error")
+        session.clear()   # straight to the sign-in page, no message (the admin log records it)
         if request.endpoint in PASSIVE_ENDPOINTS or request.is_json or request.headers.get("X-CSRF-Token"):
             return jsonify(ok=False, signed_in=False, signed_out=True, error="Signed out after inactivity."), 401
         return redirect(url_for("login"))

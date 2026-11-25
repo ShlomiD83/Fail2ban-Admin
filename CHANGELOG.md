@@ -3,6 +3,15 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- When the session ends after inactivity you land on the sign-in page with no message (the admin log still
+  records it). The one-minute countdown before that is an amber heads-up instead of a red error.
+
+### Fixed
+- Phones: the status strip (Fail2ban, Config, Public IP) is centred, so the wrapped Public IP line lines up.
+
 ## 2026.11.25-1432
 
 ### Changed

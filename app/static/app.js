@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
     deadline = Date.now() + seconds * 1000;
     if (!warn) {
       warn = document.createElement("div");
-      warn.className = "flash error idle-warn";
+      warn.className = "flash warn idle-warn";   // a heads-up, not an error
       warn.setAttribute("role", "alert");
       var text = document.createElement("span");
       var btn = document.createElement("button");
