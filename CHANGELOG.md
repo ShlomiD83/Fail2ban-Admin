@@ -3,6 +3,12 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- Each build keeps the newest 3 images on Docker Hub and GHCR (was 5), plus latest. On Docker Hub this
+  needs a DOCKERHUB_CLEANUP_TOKEN secret (Read, Write & Delete); without it that step is skipped.
+
 ## 2026.11.26-1846
 
 ### Changed
