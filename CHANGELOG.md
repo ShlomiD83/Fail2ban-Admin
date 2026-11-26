@@ -3,6 +3,13 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- Dependabot updates are no longer merged or published automatically. Each pull request still gets a test
+  build and smoke test, then a comment that mentions the repository owner (so GitHub notifies you) with the
+  result; you review and merge it yourself (workflow renamed to dependabot-check.yml).
+
 ## 2026.11.25-1756
 
 ### Changed

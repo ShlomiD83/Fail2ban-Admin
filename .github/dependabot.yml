@@ -1,10 +1,10 @@
-# Weekly pull requests for outdated or vulnerable dependencies. Patch and minor updates are merged
-# automatically after a test build (see workflows/dependabot-automerge.yml), and Python updates are
-# then published as a new image. Major updates stay open for you to review.
+# Weekly pull requests for outdated or vulnerable dependencies. Each one gets a test build and smoke test,
+# and a comment mentioning the repository owner with the result (see workflows/dependabot-check.yml).
+# Nothing is merged automatically: you review and merge each update yourself.
 #
 # Dependabot alerts and security updates are also switched on in the repository settings (Settings →
 # Code security): a package with a known vulnerability gets a pull request as soon as the advisory is
-# published, without waiting for Monday, and goes through the same test-and-merge workflow.
+# published, without waiting for Monday, and gets the same test and notification.
 # The image itself (base images, Fail2ban, system packages) is scanned weekly by workflows/cve-check.yml.
 version: 2
 updates:

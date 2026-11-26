@@ -1,0 +1,91 @@
+name: Dependabot check
+
+# For every Dependabot pull request (version and security updates):
+#   1. build the image once (amd64, not pushed) and run the smoke test (tests/smoke-test.sh)
+#   2. label the pull request and mention the repository owner in a comment with the result, so GitHub
+#      notifies you (bell icon, and email with the default settings)
+# Nothing is merged or published automatically: review the update and merge it yourself. After merging a
+# Python or editor (npm) update, run the "Build and push image" workflow to publish it.
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Test the update
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      update-type: ${{ steps.meta.outputs.update-type }}
+      ecosystem: ${{ steps.meta.outputs.package-ecosystem }}
+      deps: ${{ steps.meta.outputs.dependency-names }}
+    steps:
+      - name: Read the update details
+        id: meta
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build the image (not pushed)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          provenance: false
+          tags: fail2ban-admin:test
+          cache-from: type=gha,scope=linux-amd64
+
+      - name: Smoke test
+        run: bash tests/smoke-test.sh fail2ban-admin:test
+
+  # Runs whether the test passed or failed, once when the pull request is opened or reopened (not on every
+  # Dependabot rebase), and tells you which.
+  notify:
+    name: Ask for review
+    needs: check
+    if: >-
+      always() && github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.action != 'synchronize' && needs.check.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Label and mention the owner
+        run: |
+          case "$UPDATE" in
+            *major*) kind="a **major** version update (it may need changes; read the release notes)" ;;
+            *minor*) kind="a minor version update" ;;
+            *patch*) kind="a patch update" ;;
+            *)       kind="a dependency update" ;;
+          esac
+          if [ "$RESULT" = "success" ]; then
+            outcome="The test build and smoke test **passed**."
+          else
+            outcome="The test build or smoke test **failed**: see the checks below before merging."
+          fi
+          case "$UPDATE" in *major*) label=major-update ;; *) label=dependency-update ;; esac
+          gh label create "$label" --repo "$GITHUB_REPOSITORY" --color D93F0B \
+            --description "Dependency update waiting for review" --force
+          gh pr edit "$PR_URL" --add-label "$label"
+          publish=""
+          case "$ECOSYSTEM" in
+            pip|npm_and_yarn) publish=" After merging, run the **Build and push image** workflow to publish it." ;;
+          esac
+          gh pr comment "$PR_URL" --body "@${OWNER} this is ${kind} for **${DEPS:-a dependency}**. ${outcome} Nothing is merged automatically: review it and merge it if it looks fine.${publish}"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          OWNER: ${{ github.repository_owner }}
+          UPDATE: ${{ needs.check.outputs.update-type }}
+          ECOSYSTEM: ${{ needs.check.outputs.ecosystem }}
+          DEPS: ${{ needs.check.outputs.deps }}
+          RESULT: ${{ needs.check.result }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
