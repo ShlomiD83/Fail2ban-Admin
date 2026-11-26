@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.26-1846
 
 ### Changed
 - User menu: Sign out is set apart by a divider, shown in red, and asks for confirmation first.
