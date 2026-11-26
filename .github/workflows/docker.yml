@@ -12,9 +12,9 @@ name: Build and push image
 # the build date and time in UTC (e.g. 2026.11.18-1408), so you can pin a known-good image or roll back.
 # Both registries always get the same tags.
 #
-# Required repository secrets (Settings > Secrets and variables > Actions):
-#   DOCKERHUB_USERNAME   your Docker Hub user name
-#   DOCKERHUB_TOKEN      a Docker Hub access token with Read & Write scope
+# Required settings (Settings > Secrets and variables > Actions):
+#   variable  DOCKERHUB_USERNAME   your Docker Hub user name (not secret, so a variable)
+#   secret    DOCKERHUB_TOKEN      a Docker Hub access token with Read & Write scope
 # GHCR uses the workflow's own GITHUB_TOKEN (permission packages: write); no secret needed.
 
 on:
@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Prepare
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
@@ -69,7 +69,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GHCR
@@ -136,7 +136,7 @@ jobs:
     steps:
       - name: Prepare
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
         run: |
           echo "DOCKERHUB_IMAGE=docker.io/${DOCKERHUB_USERNAME}/${IMAGE_NAME}" >> "$GITHUB_ENV"
           echo "GHCR_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}" >> "$GITHUB_ENV"
@@ -152,7 +152,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GHCR
@@ -214,7 +214,7 @@ jobs:
       # (the build token only needs Read & Write). Without it this step is skipped.
       - name: Docker Hub dated tags beyond the newest ${{ env.KEEP }}
         env:
-          HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          HUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
           HUB_TOKEN: ${{ secrets.DOCKERHUB_CLEANUP_TOKEN }}
         run: |
           if [ -z "$HUB_TOKEN" ]; then

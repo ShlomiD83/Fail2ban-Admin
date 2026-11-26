@@ -25,8 +25,8 @@ jobs:
 
       - uses: peter-evans/dockerhub-description@v5
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/fail2ban-admin
+          repository: ${{ vars.DOCKERHUB_USERNAME }}/fail2ban-admin
           short-description: "Web UI for Fail2ban: validated jail/filter/action editor, ban and unban, reload, backups, passkeys and TOTP. amd64 and arm64."
           readme-filepath: ./README.md
