@@ -3,6 +3,14 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Fixed
+- Recent activity: older entries show the date over the time ("25 Nov" / "07:20") instead of running into the
+  coloured dot.
+- Phones, Banned now: the expiry ("expires never", "expires in 30 min") sits on the IP's line, on the right;
+  the jail and since are on the next line, then the buttons.
+
 ## 2026.11.27-0839
 
 ### Changed
