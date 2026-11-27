@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.27-0839
 
 ### Changed
 - Faster pages, most noticeably on a Raspberry Pi. The dashboard, a jail page, the jails list and the status
