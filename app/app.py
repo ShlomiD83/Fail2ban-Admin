@@ -1615,7 +1615,10 @@ def f2b_status():
 @login_required
 def jails():
     st = f2b_state()
-    return render_template("jails.html", page="jails", st=st, your_ip=client_ip(),
+    last_ban = {}                                   # jail -> newest ban in the last 30 days (for the desktop cards)
+    for h in ban_history(days=30, limit=50000) or []:
+        last_ban.setdefault(h["jail"], h["time"])
+    return render_template("jails.html", page="jails", st=st, your_ip=client_ip(), last_ban=last_ban,
                            pending=apply_pending() if not st["error"] else None)
 
 

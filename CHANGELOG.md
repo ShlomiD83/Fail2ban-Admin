@@ -3,6 +3,13 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- Jails & Bans, Jails: on desktop each jail is a card with banned now (large), total banned, failing now and
+  total, ban time, last ban and the log files watched. On phones the list shows only the jail, banned now
+  and the log files watched.
+
 ## 2026.11.27-0949
 
 ### Fixed

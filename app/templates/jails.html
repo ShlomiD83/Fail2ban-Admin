@@ -50,7 +50,29 @@
 
 <div class="card" style="margin-top:1rem">
   <h2>Jails <span class="tag mut">{{ st.jails|length }}</span> {% if st.version %}<span class="muted small" style="font-weight:400">Fail2ban {{ st.version }}</span>{% endif %}</h2>
-  <table class="stack">
+  {# desktop: one card per jail; phones: the compact table below (the two are swapped at 820px) #}
+  <div class="jcards">
+    {% for j in st.jails %}{% set s = st.status.get(j, {}) %}{% set bt = st.bantime.get(j) %}
+    <article class="jcard">
+      <div class="jc-main">
+        <a class="jc-name" href="{{ url_for('jail', name=j) }}"><span class="sdot {{ 'bad' if s.error else ('warn' if not s.files else '') }}"></span>{{ j }}</a>
+        {% if s.error %}<span class="tag bad">{{ s.error }}</span>{% else %}
+        <b class="jc-big {{ 'bad' if s.banned_now }}">{{ s.banned_now }}</b><span class="jc-sub">banned now</span>{% endif %}
+      </div>
+      {% if not s.error %}
+      <dl class="jc-kv">
+        <dt>Total banned</dt><dd>{{ s.banned_total }}</dd>
+        <dt>Failing now</dt><dd>{{ s.failed_now }} <span class="muted">· {{ s.failed_total }} total</span></dd>
+        <dt>Ban time</dt><dd>{% if bt is none %}–{% elif bt|int < 0 %}permanent{% else %}{{ bt|duration }}{% endif %}</dd>
+        <dt>Last ban</dt><dd>{{ last_ban[j]|ago if last_ban.get(j) else 'none in 30 days' }}</dd>
+        <dt>Watching</dt><dd>{% if s.files %}{{ s.files|length }} log file{{ 's' if s.files|length != 1 }}{% else %}<span class="warn-t">no log files found</span>{% endif %}</dd>
+      </dl>
+      {% endif %}
+      <div class="jc-act"><a class="btn sec sm" href="{{ url_for('jail', name=j) }}">Open</a> {{ reload_btn('Reload', jail=j, cls='btn sec sm') }}</div>
+    </article>
+    {% else %}<p class="muted" style="margin:0">No jails are running. Enable one in a jail file (enabled = true) and reload.</p>{% endfor %}
+  </div>
+  <table class="stack jtable">
     <thead><tr><th>Jail</th><th class="num">Banned now</th><th class="num">Total banned</th><th class="num">Failing now</th><th class="num">Total failures</th><th>Watching</th><th></th></tr></thead>
     <tbody>
     {% for j in st.jails %}{% set s = st.status.get(j, {}) %}
@@ -58,9 +80,9 @@
       <td data-label="Jail"><a href="{{ url_for('jail', name=j) }}"><b>{{ j }}</b></a></td>
       {% if s.error %}<td colspan="5"><span class="tag bad">{{ s.error }}</span></td>{% else %}
       <td data-label="Banned now" class="num"><span class="tag {{ 'bad' if s.banned_now else 'mut' }}">{{ s.banned_now }}</span></td>
-      <td data-label="Total banned" class="num">{{ s.banned_total }}</td>
-      <td data-label="Failing now" class="num">{{ s.failed_now }}</td>
-      <td data-label="Total failures" class="num">{{ s.failed_total }}</td>
+      <td data-label="Total banned" class="num phone-hide">{{ s.banned_total }}</td>
+      <td data-label="Failing now" class="num phone-hide">{{ s.failed_now }}</td>
+      <td data-label="Total failures" class="num phone-hide">{{ s.failed_total }}</td>
       <td data-label="Watching" class="small muted">{{ s.files|length }} log file{{ 's' if s.files|length != 1 }}</td>
       {% endif %}
       <td class="acts"><a class="btn sec sm" href="{{ url_for('jail', name=j) }}">Open</a> {{ reload_btn('Reload', jail=j, cls='btn sec sm') }}</td>
