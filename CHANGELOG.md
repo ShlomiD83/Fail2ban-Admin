@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.27-0949
 
 ### Fixed
 - Bans over time, 7 days: a ban showed under the previous day. The six-hour bars now start at midnight, so
