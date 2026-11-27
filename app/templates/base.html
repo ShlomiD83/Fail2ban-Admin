@@ -268,7 +268,8 @@
   .bars { display:flex; align-items:flex-end; gap:3px; height:130px; border-bottom:1px solid var(--bd) }
   .bars i { flex:1; background:var(--pri); opacity:.8; border-radius:2px 2px 0 0; min-height:2px; transition:height .2s }
   .bars i:hover { opacity:1 } .bars i.hi { background:var(--bad); opacity:.9 }
-  .axis { display:flex; justify-content:space-between; font-size:.72rem; color:var(--mut); padding-top:.3rem }
+  .axis { display:grid; column-gap:3px; font-size:.72rem; color:var(--mut); padding-top:.3rem }   /* same columns and gap as .bars */
+  .axis span { justify-self:center; white-space:nowrap }
   .csum { display:flex; flex-wrap:wrap; gap:.3rem 1.5rem; padding:.3rem 1.1rem .9rem; font-size:.84rem; color:var(--mut) }
   .csum b { color:var(--fg); font-size:1.02rem }
   .jrow { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; grid-template-areas:"dot name nums act" "dot meta nums act"; gap:.1rem .7rem; align-items:center; padding:.7rem 1.1rem; border-bottom:1px dashed var(--bd) }

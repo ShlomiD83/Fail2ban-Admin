@@ -1429,13 +1429,18 @@ def chart_series(hist):
     """Bans over time for the chart's three ranges: {key: {bars, ticks, total, ips, busiest}}, today, yesterday."""
     t = now()
     out = {}
-    specs = (("24h", 24, timedelta(hours=1), "%H:00", 6), ("7d", 28, timedelta(hours=6), "%a", 7),
-             ("30d", 30, timedelta(days=1), "%d %b", 6))
-    for key, n, step, fmt, n_ticks in specs:
-        if step >= timedelta(days=1):
-            start = t.replace(hour=0, minute=0, second=0, microsecond=0) - step * (n - 1)
-        elif step >= timedelta(hours=6):
-            start = t.replace(hour=(t.hour // 6) * 6, minute=0, second=0, microsecond=0) - step * (n - 1)
+    midnight = t.replace(hour=0, minute=0, second=0, microsecond=0)
+    # (key, bars, bar length, label format, bars per label, labels cover a whole group of bars)
+    # 7 days: four 6-hour bars per day, starting at midnight six days ago, so each day is exactly 4 bars and today's
+    # are the last 4 (the parts of today still to come stay empty). The day name sits under its 4 bars.
+    # 24 h and 30 days: a label every 4 hours / 5 days, under its own bar.
+    specs = (("24h", 24, timedelta(hours=1), "%H:00", 4, False), ("7d", 28, timedelta(hours=6), "%a", 4, True),
+             ("30d", 30, timedelta(days=1), "%d %b", 5, False))
+    for key, n, step, fmt, every, grouped in specs:
+        if key == "7d":
+            start = midnight - timedelta(days=6)
+        elif step >= timedelta(days=1):
+            start = midnight - step * (n - 1)
         else:
             start = t.replace(minute=0, second=0, microsecond=0) - step * (n - 1)
         counts, ips = [0] * n, set()
@@ -1450,11 +1455,12 @@ def chart_series(hist):
             b0 = start + step * i
             label = b0.strftime("%a %d %b %H:00") if step < timedelta(days=1) else b0.strftime("%a %d %b")
             bars.append({"n": c, "pct": round(c * 100 / top), "label": label, "hi": c == top and c > 0})
-        every = max(1, n // n_ticks)
+        # each label: the bar it starts at (i), how many bars it spans, and its text; the page lines it up under them
         ticks = []
-        for i in range(0, n, every):
+        for i in range(0 if grouped else every // 2, n, every):
             b0 = start + step * i
-            ticks.append("Today" if key != "24h" and b0.date() == t.date() else b0.strftime(fmt))
+            label = "Today" if key != "24h" and b0.date() == t.date() else b0.strftime(fmt)
+            ticks.append({"i": i, "span": every if grouped else 1, "label": label})
         busiest = max(range(n), key=lambda i: counts[i]) if any(counts) else None
         out[key] = {"bars": bars, "ticks": ticks, "total": sum(counts), "ips": len(ips),
                     "busiest": bars[busiest]["label"] if busiest is not None else None}

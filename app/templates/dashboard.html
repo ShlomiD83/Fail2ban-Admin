@@ -69,7 +69,7 @@
       {% if chart %}
       <div class="chart" id="chart" data-series="{{ chart_json }}">
         <div class="bars" id="chart-bars">{% for b in chart['7d'].bars %}<i class="{{ 'hi' if b.hi }}" style="height:{{ [b.pct, 2]|max }}%" title="{{ b.label }}: {{ b.n }} ban{{ 's' if b.n != 1 }}"></i>{% endfor %}</div>
-        <div class="axis" id="chart-axis">{% for t in chart['7d'].ticks %}<span>{{ t }}</span>{% endfor %}</div>
+        <div class="axis" id="chart-axis" style="grid-template-columns:repeat({{ chart['7d'].bars|length }},minmax(0,1fr))">{% for t in chart['7d'].ticks %}<span style="grid-column:{{ t.i + 1 }} / span {{ t.span }}">{{ t.label }}</span>{% endfor %}</div>
       </div>
       <div class="csum"><span><b id="chart-total">{{ chart['7d'].total }}</b> bans</span><span><b id="chart-ips">{{ chart['7d'].ips }}</b> different IPs</span>
         <span><b>{{ today }}</b> today ({% if today > yesterday %}▲ {{ today - yesterday }}{% elif today < yesterday %}▼ {{ yesterday - today }}{% else %}same as{% endif %} {{ 'vs' if today != yesterday }} yesterday)</span>

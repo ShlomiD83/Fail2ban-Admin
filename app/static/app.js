@@ -502,7 +502,14 @@ document.addEventListener("DOMContentLoaded", function () {
       i.title = b.label + ": " + b.n + " ban" + (b.n === 1 ? "" : "s");
       bars.appendChild(i);
     });
-    s.ticks.forEach(function (t) { var sp = document.createElement("span"); sp.textContent = t; axis.appendChild(sp); });
+    // one grid column per bar, so each label sits under the bars it names
+    axis.style.gridTemplateColumns = "repeat(" + s.bars.length + ",minmax(0,1fr))";
+    s.ticks.forEach(function (t) {
+      var sp = document.createElement("span");
+      sp.textContent = t.label;
+      sp.style.gridColumn = (t.i + 1) + " / span " + t.span;
+      axis.appendChild(sp);
+    });
     document.getElementById("chart-total").textContent = s.total;
     document.getElementById("chart-ips").textContent = s.ips;
     var bw = document.getElementById("chart-busiest-w");
