@@ -3,7 +3,7 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
-## Unreleased
+## 2026.11.27-0857
 
 ### Fixed
 - Recent activity: older entries show the date over the time ("25 Nov" / "07:20") instead of running into the
