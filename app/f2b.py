@@ -9,6 +9,7 @@ reads the configuration (and finds the log files) on the Fail2ban side. This is 
 import json
 import os
 import re
+import time
 from datetime import datetime, timedelta, timezone
 
 CONTAINER = os.environ.get("FAIL2BAN_CONTAINER", "fail2ban").strip()
@@ -98,31 +99,62 @@ def inspect():
         raise F2BError(docker_hint(e))
 
 
+# Each Docker call is a round trip through the socket proxy, which is slow on small machines (a Raspberry Pi),
+# so answers that several parts of one page ask for are reused for a moment. Anything that changes Fail2ban
+# (ban, unban, reload, restart) forgets them at once.
+_INFO_TTL = 2.0        # container state (docker inspect)
+_OVERVIEW_TTL = 3.0    # version and jail list
+_cache = {"info": (0.0, None), "overview": (0.0, None)}
+
+
+def forget():
+    """Drop the short-lived answers above (after anything that changes Fail2ban)."""
+    _cache["info"] = (0.0, None)
+    _cache["overview"] = (0.0, None)
+
+
+def _cached(key, ttl):
+    at, value = _cache[key]
+    return value if value is not None and time.monotonic() - at < ttl else None
+
+
 def container_info():
     """{'state': running|restarting|exited|..., 'started': datetime|None, 'image': str, 'health': str|None,
-    'restarts': int} or {'error': message}."""
+    'restarts': int} or {'error': message}. Reused for a couple of seconds."""
+    hit = _cached("info", _INFO_TTL)
+    if hit is not None:
+        return dict(hit)
     try:
         attrs = inspect()
     except F2BError as e:
-        return {"error": str(e)}
-    st = attrs.get("State", {})
-    started = None
-    m = re.match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})", st.get("StartedAt") or "")
-    if m and not st.get("StartedAt", "").startswith("0001"):
-        started = datetime.fromisoformat(m.group(1) + "+00:00")
-    return {"state": st.get("Status", "unknown"), "started": started,
-            "image": (attrs.get("Config") or {}).get("Image", ""),
-            "health": (st.get("Health") or {}).get("Status"),
-            "restarts": attrs.get("RestartCount", 0)}
+        info = {"error": str(e)}
+    else:
+        st = attrs.get("State", {})
+        started = None
+        m = re.match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})", st.get("StartedAt") or "")
+        if m and not st.get("StartedAt", "").startswith("0001"):
+            started = datetime.fromisoformat(m.group(1) + "+00:00")
+        info = {"state": st.get("Status", "unknown"), "started": started,
+                "image": (attrs.get("Config") or {}).get("Image", ""),
+                "health": (st.get("Health") or {}).get("Status"),
+                "restarts": attrs.get("RestartCount", 0)}
+    _cache["info"] = (time.monotonic(), info)
+    return dict(info)
 
 
 def _exec(cmd, what):
-    state = (inspect().get("State") or {}).get("Status")
-    if state != "running":
-        raise F2BError(f"The Fail2ban container '{CONTAINER}' isn't running ({state}).")
+    # No "is it running?" check first: that would cost a round trip on every call. Only when Docker refuses the
+    # exec is the container looked at, to say why (not running, no such container, proxy, ...).
     api = _api()
     try:
         ex = api.exec_create(CONTAINER, cmd, stdout=True, stderr=True)
+    except Exception as e:
+        state = (inspect().get("State") or {}).get("Status")   # raises a clear F2BError when it's missing
+        forget()
+        if state != "running":
+            raise F2BError(f"The Fail2ban container '{CONTAINER}' isn't running ({state}).")
+        raise F2BError(f"{what} failed: {docker_hint(e)}")
+    try:
         out, err = api.exec_start(ex["Id"], demux=True)
         code = api.exec_inspect(ex["Id"]).get("ExitCode")
     except Exception as e:
@@ -130,10 +162,41 @@ def _exec(cmd, what):
     return code, (out or b"").decode("utf-8", "replace"), (err or b"").decode("utf-8", "replace")
 
 
-def query(*cmds):
-    """Send commands to the Fail2ban server. Returns one result per command: (ok, value). A command the
-    server rejects comes back as (False, message); not reaching the server at all raises F2BError."""
-    code, out, err = _exec(["python3", "-c", _QUERY, SOCKET, json.dumps(list(cmds))], "Asking Fail2ban")
+# Everything a page about the jails needs, in ONE exec: version, jail list, and for every jail its status, ban
+# time and banned IPs with their times, plus the container's UTC offset and (optionally) one jail's settings.
+# Asking the socket is quick; it's each docker exec round trip that costs.
+_SNAPSHOT = r'''
+import json, sys, time
+from fail2ban.client.csocket import CSocket
+def enc(o):
+    if isinstance(o, BaseException): return {"__error__": str(o) or type(o).__name__, "type": type(o).__name__}
+    if isinstance(o, (set, frozenset, tuple)): return list(o)
+    return str(o)
+opts = json.loads(sys.argv[2])
+s = CSocket(sys.argv[1], timeout=15)
+out = {"tz": time.localtime().tm_gmtoff, "jails": {}}
+try:
+    out["version"] = s.send(["version"])
+    out["status"] = s.send(["status"])
+    jails = []
+    if out["status"][0] == 0:
+        for item in out["status"][1] or []:
+            if isinstance(item, (list, tuple)) and len(item) == 2 and str(item[0]) == "Jail list":
+                jails = [j.strip() for j in str(item[1]).split(",") if j.strip()]
+    for j in jails:
+        out["jails"][j] = [s.send(["status", j]), s.send(["get", j, "bantime"]),
+                           s.send(["get", j, "banip", "--with-time"])]
+    if opts.get("settings_for") in jails:
+        out["settings"] = [s.send(["get", opts["settings_for"], k]) for k in opts.get("keys", [])]
+finally:
+    s.close()
+sys.stdout.write(json.dumps(out, default=enc))
+'''
+
+
+def _run(snippet, args, what):
+    """Run a Python snippet in the Fail2ban container and return its JSON output. Raises F2BError."""
+    code, out, err = _exec(["python3", "-c", snippet, *args], what)
     if code != 0:
         low = err.lower()
         if any(x in low for x in ("no such file", "connectionrefused", "connection refused", "connectionreset",
@@ -145,21 +208,36 @@ def query(*cmds):
         last = [l for l in err.strip().splitlines() if l.strip()]
         raise F2BError("Fail2ban query failed: " + (last[-1] if last else f"exit code {code}"))
     try:
-        res = json.loads(out)
+        return json.loads(out)
     except ValueError:
         raise F2BError("Fail2ban sent an answer that isn't JSON: " + out[:200])
-    results = []
-    for item in res:
-        try:
-            rc, value = item
-        except (TypeError, ValueError):
-            rc, value = 1, item
-        if rc == 0:
-            results.append((True, value))
-        else:
-            msg = value.get("__error__") if isinstance(value, dict) else str(value)
-            results.append((False, msg))
-    return results
+
+
+def _result(item):
+    """One answer from the socket, [rc, value] -> (ok, value or error message)."""
+    try:
+        rc, value = item
+    except (TypeError, ValueError):
+        rc, value = 1, item
+    if rc == 0:
+        return True, value
+    return False, (value.get("__error__") if isinstance(value, dict) else str(value))
+
+
+_READ_ONLY = {"get", "status", "version", "banned", "ping"}
+
+
+def query(*cmds):
+    """Send commands to the Fail2ban server. Returns one result per command: (ok, value). A command the
+    server rejects comes back as (False, message); not reaching the server at all raises F2BError."""
+    changes = any(not c or str(c[0]) not in _READ_ONLY for c in cmds)
+    if changes:
+        forget()   # this changes Fail2ban: don't reuse answers from before it
+    try:
+        return [_result(item) for item in _run(_QUERY, [SOCKET, json.dumps(list(cmds))], "Asking Fail2ban")]
+    finally:
+        if changes:
+            forget()
 
 
 def one(*cmd):
@@ -171,7 +249,11 @@ def one(*cmd):
 
 def client(*args):
     """Run fail2ban-client in the container (used for reload). Returns (ok, output)."""
-    code, out, err = _exec(["fail2ban-client", *args], "fail2ban-client")
+    forget()
+    try:
+        code, out, err = _exec(["fail2ban-client", *args], "fail2ban-client")
+    finally:
+        forget()
     text = "\n".join(l for l in (out + "\n" + err).splitlines() if l.strip())
     # its log lines carry a timestamp and the logger name: keep just the message
     text = re.sub(r"^\d{4}-\d\d-\d\d [\d:,]+ fail2ban\S*\s+\[\d+\]:\s+", "", text, flags=re.M)
@@ -179,12 +261,15 @@ def client(*args):
 
 
 def restart_container():
+    forget()
     try:
         _api().restart(CONTAINER, timeout=15)
     except F2BError:
         raise
     except Exception as e:
         raise F2BError(docker_hint(e))
+    finally:
+        forget()
 
 
 # ---------- higher-level helpers ----------
@@ -197,33 +282,73 @@ def _pairs(value):
     return out
 
 
+def _jail_list(ok, status):
+    if not ok:
+        return []
+    lst = _pairs(status).get("Jail list", "")
+    return [j.strip() for j in str(lst).split(",") if j.strip()]
+
+
 def overview():
-    """Server version and the jails. Raises F2BError."""
+    """Server version and the jails. Reused for a few seconds. Raises F2BError."""
+    hit = _cached("overview", _OVERVIEW_TTL)
+    if hit is not None:
+        return {"version": hit["version"], "jails": list(hit["jails"])}
     (ok1, version), (ok2, status) = query(["version"], ["status"])
-    jails = []
-    if ok2:
-        lst = _pairs(status).get("Jail list", "")
-        jails = [j.strip() for j in str(lst).split(",") if j.strip()]
-    return {"version": version if ok1 else "", "jails": jails}
+    ov = {"version": version if ok1 else "", "jails": _jail_list(ok2, status)}
+    _cache["overview"] = (time.monotonic(), ov)
+    return {"version": ov["version"], "jails": list(ov["jails"])}
+
+
+def _status(ok, value):
+    """One jail's `status` answer -> {...} (or {'error'})."""
+    if not ok:
+        return {"error": value}
+    p = _pairs(value)
+    f, a = _pairs(p.get("Filter")), _pairs(p.get("Actions"))
+    files = f.get("File list") or f.get("Journal matches") or []
+    return {"failed_now": f.get("Currently failed", 0), "failed_total": f.get("Total failed", 0),
+            "files": files if isinstance(files, list) else [files],
+            "banned_now": a.get("Currently banned", 0), "banned_total": a.get("Total banned", 0),
+            "banned": list(a.get("Banned IP list") or [])}
 
 
 def jail_status(jails):
     """{jail: {...}} for the given jails, one round trip."""
     if not jails:
         return {}
-    res = query(*[["status", j] for j in jails])
-    out = {}
-    for j, (ok, value) in zip(jails, res):
-        if not ok:
-            out[j] = {"error": value}
-            continue
-        p = _pairs(value)
-        f, a = _pairs(p.get("Filter")), _pairs(p.get("Actions"))
-        files = f.get("File list") or f.get("Journal matches") or []
-        out[j] = {"failed_now": f.get("Currently failed", 0), "failed_total": f.get("Total failed", 0),
-                  "files": files if isinstance(files, list) else [files],
-                  "banned_now": a.get("Currently banned", 0), "banned_total": a.get("Total banned", 0),
-                  "banned": list(a.get("Banned IP list") or [])}
+    return {j: _status(ok, value) for j, (ok, value) in zip(jails, query(*[["status", j] for j in jails]))}
+
+
+def snapshot(settings_for=None):
+    """Everything about the jails in one round trip:
+    {'version', 'jails', 'status': {jail: {...}}, 'bantime': {jail: seconds|None},
+     'banned': {jail: [{'ip', 'start', 'bantime', 'end'}] or {'error': message}}, 'settings': {...} or None}
+    `settings_for`: also that jail's settings (as jail_settings returns them). Raises F2BError."""
+    data = _run(_SNAPSHOT, [SOCKET, json.dumps({"settings_for": settings_for, "keys": list(JAIL_SETTINGS)})],
+                "Asking Fail2ban")
+    try:
+        tz = timezone(timedelta(seconds=int(data.get("tz") or 0)))
+    except (TypeError, ValueError):
+        tz = timezone.utc
+    _offset_cache.update(at=time.time(), tz=tz)
+    ok1, version = _result(data.get("version"))
+    ok2, status = _result(data.get("status"))   # an error here means no jails, as overview() treats it
+    jails, per = [], data.get("jails") or {}
+    out = {"version": version if ok1 else "", "jails": jails, "status": {}, "bantime": {}, "banned": {},
+           "settings": None}
+    for j in _jail_list(ok2, status):    # Fail2ban's own order
+        st_item, bt_item, ban_item = (per.get(j) or [None, None, None])[:3]
+        jails.append(j)
+        out["status"][j] = _status(*_result(st_item))
+        ok, bt = _result(bt_item)
+        out["bantime"][j] = bt if ok else None
+        ok, lines = _result(ban_item)
+        out["banned"][j] = _banned(lines, lambda: tz) if ok else {"error": lines}
+    if settings_for in jails and data.get("settings"):
+        out["settings"] = {k: (v if ok else None)
+                           for k, (ok, v) in zip(JAIL_SETTINGS, (_result(i) for i in data["settings"]))}
+    _cache["overview"] = (time.monotonic(), {"version": out["version"], "jails": list(jails)})
     return out
 
 
@@ -250,22 +375,28 @@ def container_tz():
     return tz
 
 
-def banned_with_time(jail):
-    """[{'ip', 'start', 'bantime', 'end'}] with time-zone-aware times (end None for a permanent ban)."""
+def _banned(lines, get_tz):
+    """`get <jail> banip --with-time` lines -> [{'ip', 'start', 'bantime', 'end'}] with time-zone-aware times
+    (end None for a permanent ban). get_tz is only called when a line has times."""
     out = []
     tz = None
-    for line in one("get", jail, "banip", "--with-time") or []:
+    for line in lines or []:
         m = _BAN_LINE.match(str(line).strip())
         if not m:
             out.append({"ip": str(line).split()[0] if str(line).split() else str(line),
                         "start": None, "bantime": None, "end": None})
             continue
-        tz = tz or container_tz()
+        tz = tz or get_tz()
         bt = int(m.group(3))
         start = datetime.strptime(m.group(2), "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
         end = None if bt < 0 else datetime.strptime(m.group(4), "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
         out.append({"ip": m.group(1), "start": start, "bantime": bt, "end": end})
     return out
+
+
+def banned_with_time(jail):
+    """[{'ip', 'start', 'bantime', 'end'}] with time-zone-aware times (end None for a permanent ban)."""
+    return _banned(one("get", jail, "banip", "--with-time"), container_tz)
 
 
 JAIL_SETTINGS = ("maxretry", "findtime", "bantime", "logpath", "actions", "ignoreip", "ignoreself",

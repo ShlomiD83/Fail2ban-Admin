@@ -3,6 +3,15 @@
 All notable changes to Fail2ban Admin. Images are tagged by build date and time (`YYYY.MM.DD-HHmm`), so
 entries are headed by build date rather than by version.
 
+## Unreleased
+
+### Changed
+- Faster pages, most noticeably on a Raspberry Pi. The dashboard, a jail page, the jails list and the status
+  strip get everything from Fail2ban in one docker exec instead of one per question and per jail, the
+  container is no longer checked before every call (only when a call fails, to explain why), and the
+  container state and jail list are reused for a few seconds (forgotten at once after a ban, unban, reload
+  or restart). Measured locally: dashboard 1.5 s to 0.7 s, a jail page 1.0 s to 0.4 s.
+
 ## 2026.11.26-1954
 
 ### Changed

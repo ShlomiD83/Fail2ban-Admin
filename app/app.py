@@ -1332,18 +1332,24 @@ def starting_since(info, not_answering=False):
     return max(0, int(age)) if age < STARTUP_GRACE else None
 
 
-def f2b_state(with_status=True):
-    """{'info': container info, 'version', 'jails', 'status': {jail: ...}, 'error', 'starting'}
-    'starting' (seconds since the start) is set instead of a plain error while Fail2ban is still starting up."""
-    st = {"info": f2b.container_info(), "version": "", "jails": [], "status": {}, "error": None, "starting": None}
+def f2b_state(with_status=True, settings_for=None):
+    """{'info': container info, 'version', 'jails', 'status': {jail: ...}, 'bantime': {jail: s},
+    'banned': {jail: [...] or {'error'}}, 'settings': {...} or None, 'error', 'starting'}
+    With status it's one round trip to Fail2ban for everything (see f2b.snapshot); `settings_for` adds that jail's
+    settings to it. 'starting' (seconds since the start) is set instead of a plain error while Fail2ban starts up."""
+    st = {"info": f2b.container_info(), "version": "", "jails": [], "status": {}, "bantime": {}, "banned": {},
+          "settings": None, "error": None, "starting": None}
     if st["info"].get("error"):
         st["error"] = st["info"]["error"]
         return st
     try:
-        ov = f2b.overview()
-        st.update(version=ov["version"], jails=ov["jails"])
-        if with_status:
-            st["status"] = f2b.jail_status(ov["jails"])
+        if with_status or settings_for:
+            snap = f2b.snapshot(settings_for=settings_for)
+            st.update(version=snap["version"], jails=snap["jails"], status=snap["status"],
+                      bantime=snap["bantime"], banned=snap["banned"], settings=snap["settings"])
+        else:
+            ov = f2b.overview()
+            st.update(version=ov["version"], jails=ov["jails"])
         _silent_since["at"] = None
     except F2BError as e:
         st["error"] = str(e)
@@ -1467,31 +1473,25 @@ def dashboard():
         latest_ban.setdefault((h["jail"], h["ip"]), h)
         last_in_jail.setdefault(h["jail"], h["time"])
 
-    # jails: compact rows, with the ban time of each (one round trip)
+    # jails: compact rows, with the ban time of each (all from the one snapshot in f2b_state)
     jails_info = []
-    if not st["error"] and st["jails"]:
-        try:
-            bts = f2b.query(*[["get", j, "bantime"] for j in st["jails"]])
-        except F2BError:
-            bts = [(False, None)] * len(st["jails"])
-        for j, (ok, bt) in zip(st["jails"], bts):
+    if not st["error"]:
+        for j in st["jails"]:
             s = st["status"].get(j, {})
             jails_info.append({"name": j, "banned": s.get("banned_now", 0), "failed": s.get("failed_now", 0),
                                "logs": len(s.get("files") or []), "error": s.get("error"),
-                               "bantime": bt if ok else None, "last": last_in_jail.get(j)})
+                               "bantime": st["bantime"].get(j), "last": last_in_jail.get(j)})
 
     # banned now, with when each ban ends and why (from the database)
     banned, banned_error = [], None
     for j in (st["jails"] if not st["error"] else []):
-        if not st["status"].get(j, {}).get("banned_now"):
+        lst = st["banned"].get(j)
+        if isinstance(lst, dict):      # this jail's list couldn't be read
+            banned_error = lst.get("error")
             continue
-        try:
-            for b in f2b.banned_with_time(j):
-                b["jail"] = j
-                b["why"] = ban_reason(latest_ban.get((j, b["ip"])))
-                banned.append(b)
-        except F2BError as e:
-            banned_error = str(e)
+        for b in lst or []:
+            b = dict(b, jail=j, why=ban_reason(latest_ban.get((j, b["ip"]))))
+            banned.append(b)
     banned.sort(key=lambda b: b["start"].timestamp() if b["start"] else 0, reverse=True)
 
     # needs attention: only things to act on
@@ -1616,25 +1616,26 @@ def jails():
 @app.route("/jails/<name>")
 @login_required
 def jail(name):
-    st = f2b_state(with_status=False)
+    st = f2b_state(settings_for=name)    # status, bans and this jail's settings: one round trip
     if st["error"]:
         return render_template("jail.html", page="jails", name=name, st=st, error=st["error"])
     if name not in st["jails"]:
         # during a reload a jail disappears for a moment while Fail2ban sets it up again: look once more
         time.sleep(1.5)
-        st = f2b_state(with_status=False)
+        f2b.forget()
+        st = f2b_state(settings_for=name)
         if st["error"]:
             return render_template("jail.html", page="jails", name=name, st=st, error=st["error"])
     if name not in st["jails"]:
         flash(f"There's no running jail called '{name}'. It may be disabled, or Fail2ban hasn't been reloaded "
               "since it was added.", "error")
         return redirect(url_for("jails"))
-    try:
-        status = f2b.jail_status([name])[name]
-        banned = f2b.banned_with_time(name)
-        settings = f2b.jail_settings(name)
-    except F2BError as e:
-        return render_template("jail.html", page="jails", name=name, st=st, error=str(e))
+    status = st["status"].get(name) or {}
+    banned = st["banned"].get(name)
+    if isinstance(banned, dict):     # the banned list couldn't be read
+        return render_template("jail.html", page="jails", name=name, st=st, error=banned.get("error"))
+    banned = [dict(b) for b in banned or []]
+    settings = st["settings"] or {k: None for k in f2b.JAIL_SETTINGS}
     for b in banned:
         if b["end"]:
             end = b["end"] if b["end"].tzinfo else b["end"].replace(tzinfo=TZINFO)
